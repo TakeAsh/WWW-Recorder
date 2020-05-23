@@ -1,6 +1,6 @@
 # NAME
 
-Net::Recorder - It's new $module
+Net::Recorder - NetRadio recorder with scheduler.
 
 # SYNOPSIS
 
@@ -12,11 +12,11 @@ Net::Recorder is ...
 
 # LICENSE
 
-Copyright (C) TakeAsh.
+Copyright (C) TakeAsh68k.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 # AUTHOR
 
-TakeAsh &lt;take@TakeAsh.net>
+[TakeAsh68k](https://github.com/TakeAsh)
