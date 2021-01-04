@@ -75,7 +75,7 @@ sub getProgramsFromUri {
     my $self    = shift;
     my $index   = shift or return;
     my $total   = shift or return;
-    my $program = shift or return;
+    my $uri     = shift or return;
     my $match   = shift or return;
     my $service = $self->Services()->ByChannel( $match->{'channel'} )->{'Service'};
     my $detail  = $self->getProgramDetail(
