@@ -1,0 +1,309 @@
+﻿/* Net-Recorder CSS */
+
+@media (prefers-color-scheme: light) {
+  body {
+    color: #000000;
+    background-color: #d0d0f0;
+  }
+
+  .hide {
+    background-color: #d0d0f0;
+  }
+
+  a:link {
+    color: #0000ee;
+  }
+
+  a:visited {
+    color: #551a8b;
+  }
+
+  a:active {
+    color: #ff0000;
+  }
+
+  a:hover {
+    color: #ff0000;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    color: #000000;
+    background-color: #f0f0ff;
+  }
+
+  table {
+    border: solid 1px #000000;
+  }
+
+  th {
+    background-color: #f0f0f0;
+  }
+
+  .HeaderArea {
+    background-color: #d0d0f0;
+  }
+
+  .tr_hover:hover {
+    box-shadow: inset 0px 0px 0px 6px #ff4040;
+  }
+
+  .tr_checked {
+    background-color: #ffa0ff !important;
+  }
+
+  .STAT_DOWNLOADING_0 {
+    background-color: #f0f0ff;
+  }
+
+  .STAT_DOWNLOADING_1 {
+    background-color: #c0c0ff;
+  }
+
+  .STAT_STANDBY_0 {
+    background-color: #e0f0f0;
+  }
+
+  .STAT_STANDBY_1 {
+    background-color: #b0e0e0;
+  }
+
+  .STAT_WAITING_0 {
+    background-color: #ffffc0;
+  }
+
+  .STAT_WAITING_1 {
+    background-color: #ffff60;
+  }
+
+  .STAT_DONE_0 {
+    background-color: #c0ffc0;
+  }
+
+  .STAT_DONE_1 {
+    background-color: #80ff80;
+  }
+
+  .STAT_ABORT_0 {
+    background-color: #ffc0c0;
+  }
+
+  .STAT_ABORT_1 {
+    background-color: #ff8080;
+  }
+
+  .STAT_FAILED_0 {
+    background-color: #f0d0d0;
+  }
+
+  .STAT_FAILED_1 {
+    background-color: #d0b0b0;
+  }
+
+  .STAT_NO_INFO_0 {
+    background-color: #ffc0c0;
+  }
+
+  .STAT_NO_INFO_1 {
+    background-color: #ff8080;
+  }
+
+  .ProgramDesc {
+    background-color: rgba(200, 200, 200, 0.95);
+    border: solid 2px #3f7f3f;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    color: #e4e4e4;
+    background-color: #2f2f0f;
+  }
+
+  .hide {
+    background-color: #2f2f0f;
+  }
+
+  a:link {
+    color: #c0c0ff;
+  }
+
+  a:visited {
+    color: #e0c0ff;
+  }
+
+  a:active {
+    color: #ff0000;
+  }
+
+  a:hover {
+    color: #ff0000;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    color: #e4e4e4;
+    background-color: #3f3f50;
+  }
+
+  table {
+    border: solid 1px #e4e4e4;
+  }
+
+  th {
+    background-color: #3f3f50;
+  }
+
+  .ProgramDesc {
+    background-color: rgba(48, 48, 48, 0.95);
+    border: solid 2px #7fff7f;
+  }
+}
+
+body {
+  line-height: 120%;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  overflow-wrap: break-word;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-weight: bold;
+  width: 100%;
+  border: none;
+  padding: 0.2% 0.2% 0.2% 0.2%;
+}
+
+h1 {
+  padding: 0.5% 0.5% 0.5% 0.5%;
+  font-size: 140%;
+}
+
+h2 {
+  font-size: 120%;
+}
+
+h3 {
+  font-size: 110%;
+}
+
+h4,
+h5 {
+  font-size: 100%;
+}
+
+table {
+  overflow-wrap: break-word;
+  border-collapse: collapse;
+}
+
+th {
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+}
+
+td {
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+}
+
+/* TwEmoji Inline Styles */
+img.emoji {
+  height: 1em;
+  width: 1em;
+  margin: 0.05em 0.1em;
+  vertical-align: -0.1em;
+}
+
+.HeaderArea {
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 2px 2px;
+  text-align: right;
+  z-index: 10;
+}
+
+.MenuArea {
+  display: none;
+}
+
+.MenuPart {
+  margin: 4px;
+}
+
+.ShowMenu {
+  display: initial;
+}
+
+.PreferenceList {
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+.defalut {
+  text-align: initial;
+}
+
+.alignLeft {
+  text-align: left;
+}
+
+.alignCenter {
+  text-align: center;
+}
+
+.alignRight {
+  text-align: right;
+}
+
+.sticky_table thead th {
+  /* 縦スクロール時に固定する */
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  /* tbody内のセルより手前に表示する */
+  z-index: 1;
+}
+
+.sticky_table thead th:first-child {
+  /* ヘッダー行内の他のセルより手前に表示する */
+  z-index: 2;
+}
+
+.sticky_table th:first-child {
+  /* 横スクロール時に固定する */
+  position: -webkit-sticky;
+  position: sticky;
+  left: 0;
+}
+
+.ProgramTitle {
+  position: relative;
+}
+
+.ProgramDesc {
+  position: absolute;
+  display: none;
+  padding: 0.4em;
+  left: 0%;
+  top: 95%;
+  z-index: 10;
+}
+
+.ProgramTitle:hover .ProgramDesc {
+  display: block;
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description = NetRecorder record daemon
+After = network-online.target
+
+[Service]
+Type = oneshot
+ExecStart = /var/www/Net-Recorder/service/record.pl
+#User = apache
+#Group = apache
+
+[Install]
+WantedBy = multi-user.target

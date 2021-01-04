@@ -1,0 +1,26 @@
+DbInfo:
+  Driver:   mysql
+  Server:   localhost
+  Port:     3306
+  Client:   localhost
+  DB:       NetRecorderDB
+  User:     NetRecorder
+  Password: ""
+  Options:
+    mysql_enable_utf8mb4: 1
+    mysql_multi_statements: 1
+  DSN:      DBI:{Driver}:host={Server};port={Port};database={DB};
+
+SaveDirs:
+  - /tmp
+
+Keywords:
+  -
+    Key: アニソン
+    Not: ~
+  -
+    Key: アニメ
+    Not: ~
+  -
+    Key: 声優
+    Not: ~

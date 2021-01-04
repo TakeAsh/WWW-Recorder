@@ -1,0 +1,12 @@
+[Unit]
+Description = NetRecorder getPrograms daemon
+After = network-online.target
+
+[Service]
+Type = oneshot
+ExecStart = /var/www/Net-Recorder/service/getPrograms.pl
+#User = apache
+#Group = apache
+
+[Install]
+WantedBy = multi-user.target

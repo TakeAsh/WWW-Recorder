@@ -1,0 +1,92 @@
+SetupDatabase: |
+  CREATE DATABASE IF NOT EXISTS `{DB}` DEFAULT CHARSET=utf8mb4;
+  GRANT ALL PRIVILEGES ON {DB}.* TO '{User}'@'{Client}' IDENTIFIED BY '{Password}';
+  USE `{DB}`;
+  DROP TABLE IF EXISTS `States`;
+  CREATE TABLE `States` (
+    `Status` varchar(32) PRIMARY KEY,
+    `Order` int
+  );
+  INSERT INTO `States` 
+    (`Status`, `Order`)
+  VALUES 
+    ("DOWNLOADING", 1), ("STANDBY", 2), ("WAITING", 3), ("DONE", 4), 
+    ("ABORT", 99), ("FAILED", -1), ("NO_INFO", -2);
+  DROP TABLE IF EXISTS `Programs`;
+  CREATE TABLE `Programs` (
+    `Provider` varchar(32) NOT NULL,
+    `ID` varchar(48) NOT NULL,
+    `Extra` varchar(4096),
+    `Start` datetime,
+    `End` datetime,
+    `Duration` int,
+    `Title` varchar(256),
+    `Description` varchar(4096),
+    `Info` varchar(4096),
+    `Performer` varchar(256),
+    `Uri` varchar(256),
+    `Status` varchar(32),
+    `Keyword` varchar(256),
+    `Update` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`Provider`, `ID`)
+  );
+InsertProgram: |
+  INSERT INTO `Programs` 
+    (`Provider`, `ID`, `Extra`, `Start`, `End`, `Duration`, 
+    `Title`, `Description`, `Info`, `Performer`, `Uri`, `Status`, `Keyword`)
+  VALUES 
+    (:Provider-VARCHAR, :ID-VARCHAR, :Extra-VARCHAR,
+    :Start-VARCHAR, :End-VARCHAR, :Duration-INTEGER,
+    :Title-VARCHAR, :Description-VARCHAR, :Info-VARCHAR, :Performer-VARCHAR,
+    :Uri-VARCHAR, :Status-VARCHAR, :Keyword-VARCHAR)
+  ON DUPLICATE KEY UPDATE 
+    `Extra`=VALUES(`Extra`), 
+    `Start`=VALUES(`Start`), `End`=VALUES(`End`), `Duration`=VALUES(`Duration`), 
+    `Title`=VALUES(`Title`), `Description`=VALUES(`Description`), 
+    `Info`=VALUES(`Info`), `Performer`=VALUES(`Performer`), 
+    `Uri`=VALUES(`Uri`), `Status`=VALUES(`Status`), `Keyword`=VALUES(`Keyword`);
+CheckProgram: |
+  SELECT * 
+  FROM `Programs` 
+  WHERE `Provider` = :Provider-VARCHAR AND `ID` = :ID-VARCHAR 
+    AND `Status` IN ("DOWNLOADING", "STANDBY", "DONE", "ABORT");
+GetProgramsForDisplay: |
+  SELECT p.*, 
+    DATE_FORMAT(p.`Start`, '%m/%d %H:%i') AS `StartShort`, 
+    DATE_FORMAT(p.`End`, '%m/%d %H:%i') AS `EndShort`, 
+    DATE_FORMAT(p.`Update`, '%m/%d %H:%i:%s') AS `UpdateShort`
+  FROM `Programs` p
+  LEFT JOIN `States` s ON p.`Status` = s.`Status`
+  WHERE p.`Provider` = :Provider-VARCHAR
+SortBy:
+  Status:   ORDER BY s.`Order`, p.`Start`, p.`End`, p.`Title`;
+  Title:    ORDER BY p.`Title` COLLATE utf8mb4_unicode_ci, p.`Start`, p.`End`, s.`Order`;
+  Update:   ORDER BY p.`Update` desc, s.`Order`, p.`Start`, p.`End`, p.`Title`;
+GetProgramsForRecord: |
+  SELECT p.*
+  FROM `Programs` p
+  LEFT JOIN `States` s ON p.`Status` = s.`Status`
+  WHERE p.`Provider` = :Provider-VARCHAR AND p.`Status` in ("WAITING", "FAILED") AND p.`Start` <= ADDTIME(now(), "00:05:00") 
+  ORDER BY s.`Order`, p.`Start`, p.`End`, p.`Title`;
+GetProgramsForExport: |
+  SELECT p.* 
+  FROM `Programs` p 
+  WHERE p.`Provider` = :Provider-VARCHAR 
+  ORDER BY p.`Title` COLLATE utf8mb4_unicode_ci, p.`Start`, p.`End`;
+SetStatus: |
+  UPDATE `Programs` 
+  SET `Status` = :Status-VARCHAR 
+  WHERE `Provider` = :Provider-VARCHAR AND `ID` = :ID-VARCHAR;
+AbortPrograms: |
+  UPDATE `Programs` 
+  SET `Status` = "ABORT" 
+  WHERE `Provider` = :Provider-VARCHAR AND `ID` in ( :ID+-VARCHAR );
+RemovePrograms: |
+  DELETE FROM `Programs` 
+  WHERE `Provider` = :Provider-VARCHAR AND `ID` in ( :ID+-VARCHAR );
+  OPTIMIZE TABLE `Programs`;
+GetColumns: |
+  SELECT  * 
+  FROM    `INFORMATION_SCHEMA`.`COLUMNS` 
+  WHERE   `TABLE_NAME` = :TableName-VARCHAR
+  ORDER BY `ORDINAL_POSITION`;
