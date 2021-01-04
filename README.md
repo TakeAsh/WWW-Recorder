@@ -10,6 +10,12 @@ Net::Recorder - NetRadio recorder with scheduler.
 
 Net::Recorder is ...
 
+# SEE ALSO
+
+[Rec-adio](https://github.com/sun-yryr/Rec-adio)
+
+[rec\_radiko\_ts](https://github.com/uru2/rec_radiko_ts)
+
 # LICENSE
 
 Copyright (C) TakeAsh68k.
@@ -19,4 +25,4 @@ it under the same terms as Perl itself.
 
 # AUTHOR
 
-[TakeAsh68k](https://github.com/TakeAsh)
+[TakeAsh68k](https://github.com/TakeAsh/)

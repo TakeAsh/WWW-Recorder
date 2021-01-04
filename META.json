@@ -1,10 +1,10 @@
 {
-   "abstract" : "It's new $module",
+   "abstract" : "NetRadio recorder with scheduler.",
    "author" : [
-      "TakeAsh <take@TakeAsh.net>"
+      "L<TakeAsh68k|https://github.com/TakeAsh/>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.1.10, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Minilla/v3.1.11, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -42,18 +42,64 @@
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008001"
+            "Const::Fast" : "0",
+            "DBIx::NamedParams" : "0",
+            "Digest::SHA2" : "0",
+            "Encode" : "0",
+            "File::HomeDir" : "0",
+            "File::Temp" : "0",
+            "Filesys::DfPortable" : "0",
+            "FindBin::libs" : "0",
+            "HTML::Entities" : "0",
+            "IPC::Cmd" : "0",
+            "JSON::XS" : "0",
+            "LWP::UserAgent" : "0",
+            "Lingua::JA::Numbers" : "0",
+            "Lingua::JA::Regular::Unicode" : "0",
+            "List::Util" : "0",
+            "MIME::Base64" : "0",
+            "Module::Find" : "0",
+            "Number::Bytes::Human" : "0",
+            "Scalar::Util" : "0",
+            "Template" : "0",
+            "Term::Encoding" : "0",
+            "Time::Piece" : "0",
+            "Time::Seconds" : "0",
+            "Try::Tiny" : "0",
+            "URI" : "0",
+            "URI::Escape" : "0",
+            "XML::Simple" : "0",
+            "YAML::Syck" : "0",
+            "feature" : "0",
+            "parent" : "0",
+            "perl" : "5.008001",
+            "version" : "0.77"
          }
       },
       "test" : {
          "requires" : {
-            "Test::More" : "0.98"
+            "Test::More" : "0",
+            "Test::More::UTF8" : "0"
          }
       }
    },
    "release_status" : "unstable",
-   "version" : "0.01",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/TakeAsh/Net-Recorder/issues"
+      },
+      "homepage" : "https://github.com/TakeAsh/Net-Recorder",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/TakeAsh/Net-Recorder.git",
+         "web" : "https://github.com/TakeAsh/Net-Recorder"
+      }
+   },
+   "version" : "v0.0.1",
    "x_authority" : "cpan:TAKEASH",
-   "x_serialization_backend" : "JSON::PP version 4.04",
+   "x_contributors" : [
+      "TakeAsh <take@TakeAsh.net>"
+   ],
+   "x_serialization_backend" : "JSON::PP version 4.05",
    "x_static_install" : 1
 }
