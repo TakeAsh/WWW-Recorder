@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-# Net-Recorder / index.cgi
 
 use strict;
 use warnings;
@@ -9,9 +8,9 @@ use Encode;
 use YAML::Syck qw( LoadFile Dump );
 use Template;
 use CGI;
+use File::Share ':all';
 use FindBin::libs "Bin=${FindBin::RealBin}";
 use Net::Recorder;
-use Net::Recorder::Provider;
 use Net::Recorder::Util;
 use Term::Encoding qw(term_encoding);
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
@@ -23,7 +22,7 @@ my $q = new CGI;
 $q->charset(term_encoding);
 my $cookie = getCookie($q);
 my $tt     = Template->new(
-    {   INCLUDE_PATH => "${FindBin::RealBin}/../templates",
+    {   INCLUDE_PATH => dist_dir('Net-Recorder') . '/templates',
         ENCODING     => 'utf-8',
     }
 ) or die( Template->error() );

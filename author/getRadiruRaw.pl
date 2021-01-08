@@ -9,7 +9,8 @@ use YAML::Syck qw( LoadFile DumpFile Dump );
 use File::Basename;
 use List::Util qw(first);
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder::Provider;
+use Net::Recorder;
+use Net::Recorder::Util;
 use Term::Encoding qw(term_encoding);
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
@@ -23,4 +24,5 @@ my $radiru  = Net::Recorder::Provider->new('radiru')           or die("Failed to
 my $area    = $radiru->ConfigWeb()->Areas()->ByName($areaName) or die("Invalid area: ${areaName}");
 my $service = $radiru->Services()->ByChannel($channel) or die("Invalid channel: ${channel}");
 my $prog    = $radiru->getProgramDay( $area, $service, $date );
-DumpFile( "${FindBin::RealBin}/../log/radiru_${areaName}_${channel}_$date.yml", $prog );
+my $conf    = loadConfig();
+DumpFile( "$conf->{LogDir}/radiru_${areaName}_${channel}_$date.yml", $prog );

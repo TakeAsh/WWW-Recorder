@@ -15,13 +15,12 @@ use HTML::Entities;
 use Lingua::JA::Regular::Unicode qw( alnum_z2h space_z2h );
 use Lingua::JA::Numbers;
 use Number::Bytes::Human qw(format_bytes parse_bytes);
-use File::Basename;
-use File::Spec;
+use File::Share ':all';
 use File::HomeDir;
 use Filesys::DfPortable;
 use List::Util qw(first);
-use FindBin::libs;
 use DBIx::NamedParams;
+use FindBin::libs "Bin=${FindBin::RealBin}";
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 our @EXPORT = qw(
@@ -50,10 +49,10 @@ my $cookieName = encodeUtf8('NetRecorder');
 
 sub loadConfig {
     my $fname = shift || 'config';
-    my $dir   = File::Spec->rel2abs( dirname(__FILE__) );
-    my $file  = "${dir}/../../../conf/${fname}.yml";
+    my $dir   = dist_dir('Net-Recorder');
+    my $file  = "${dir}/conf/${fname}.yml";
     if ( !( -f $file ) && $fname eq 'config' ) {
-        $file = "${dir}/../../../conf/config_default.yml";
+        $file = "${dir}/conf/config_default.yml";
     }
     my $conf = LoadFile($file) or die("${file}: $!");
     if ( my $db = $conf->{'DbInfo'} ) {

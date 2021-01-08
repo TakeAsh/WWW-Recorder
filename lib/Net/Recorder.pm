@@ -162,8 +162,8 @@ sub exportAll {
             @{ getColumnsArray( $dbh, 'Programs' ) }
     ];
     my $sth = $dbh->prepare_ex( $sql->{'GetProgramsForExport'} ) or die($DBI::errstr);
-    my $t   = localtime;
-    my $now = $t->strftime('%Y%m%d%H%M%S');
+    my $t   = Net::Recorder::TimePiece->new();
+    my $now = $t->toPostfix();
     foreach my $provider (@providers) {
         my $programs = getProgramsForExport( $sth, $provider ) or next;
         savePrograms( $provider, $now, $columns, $programs );
@@ -192,9 +192,8 @@ sub savePrograms {
     my $now      = shift or return;
     my $columns  = shift or return;
     my $programs = shift or return;
-    my $dir      = File::Spec->rel2abs( dirname(__FILE__) );
-    my $fname    = "${dir}/../../log/${provider}_${now}.tsv";
-    if ( -e $fname ) {
+    my $fname    = "$conf->{LogDir}/${provider}_${now}.tsv";
+    if ( -f $fname ) {
         die("$fname: already exist");
     }
     open( my $fh, '>:utf8', $fname ) or die("$fname: $!");

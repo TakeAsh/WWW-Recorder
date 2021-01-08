@@ -4,7 +4,7 @@ After = network-online.target
 
 [Service]
 Type = oneshot
-ExecStart = /var/www/Net-Recorder/service/getPrograms.pl
+ExecStart = /var/www/Net-Recorder/share/service/getPrograms.pl
 #User = apache
 #Group = apache
 
