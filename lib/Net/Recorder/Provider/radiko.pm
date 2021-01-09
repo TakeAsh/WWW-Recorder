@@ -254,7 +254,7 @@ sub getStream {
     my $station = $program->Extra()->{'Station'};
     my $detail  = $self->matchStart(
         $self->getInfos(
-            sql     => 'ProgramsByStation',
+            api     => 'ProgramsByStation',
             date    => $program->Extra()->{'Date'},
             station => $station,
         ),

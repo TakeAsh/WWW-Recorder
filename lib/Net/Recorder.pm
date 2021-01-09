@@ -170,7 +170,6 @@ sub exportAll {
     }
     $sth->finish;
     $dbh->disconnect;
-
 }
 
 sub getProgramsForExport {
