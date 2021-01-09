@@ -75,10 +75,9 @@ sub getPrograms {
     for ( my $i = 0; $i < 7; ++$i, $t += ONE_DAY ) {
         sleep(1);
         my $infos = $self->getInfos(
-            {   sql  => 'ProgramsByArea',
-                date => $t->ymd(''),
-                area => $self->area(),
-            }
+            api  => 'ProgramsByArea',
+            date => $t->ymd(''),
+            area => $self->area(),
         ) or next;
         my $progs   = $self->toPrograms($infos) or next;
         my $filered = $self->filter($progs)     or next;
@@ -97,10 +96,9 @@ sub getProgramsFromUri {
     my $match    = shift or return;
     my @programs = ();
     my $infos    = $self->getInfos(
-        {   sql     => 'ProgramsByStation',
-            date    => $match->{'date'},
-            station => $match->{'station'},
-        }
+        api     => 'ProgramsByStation',
+        date    => $match->{'date'},
+        station => $match->{'station'},
     ) or return;
     my $prog = $self->matchStart( $infos, $match->{'date'} . $match->{'time'} ) or return;
     return [ $self->toProgram($prog) ];
@@ -108,8 +106,8 @@ sub getProgramsFromUri {
 
 sub getInfos {
     my $self  = shift;
-    my $param = shift or return;
-    my $res   = $self->request( GET => $conf->{'Uris'}{ $param->{'sql'} }, $param )->call();
+    my $param = {@_};
+    my $res   = $self->request( GET => $conf->{'Uris'}{ $param->{'api'} }, $param )->call();
     if ( !$res->is_success || !$res->decoded_content ) {
         $self->log( $res->status_line . ': ' . $res->request->uri );
         return;
@@ -256,10 +254,9 @@ sub getStream {
     my $station = $program->Extra()->{'Station'};
     my $detail  = $self->matchStart(
         $self->getInfos(
-            {   sql     => 'ProgramsByStation',
-                date    => $program->Extra()->{'Date'},
-                station => $station,
-            }
+            sql     => 'ProgramsByStation',
+            date    => $program->Extra()->{'Date'},
+            station => $station,
         ),
         $program->Extra()->{'DateTime'}
     ) || $program;

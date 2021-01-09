@@ -20,9 +20,10 @@ $YAML::Syck::ImplicitUnicode = 1;
 my $exec = basename($0);
 if ( @ARGV < 3 ) { die("usage: ${exec} <area> <channel> <yyyy-mm-dd>\n"); }
 my ( $areaName, $channel, $date ) = @ARGV;
-my $radiru  = Net::Recorder::Provider->new('radiru')           or die("Failed to get radiru");
-my $area    = $radiru->ConfigWeb()->Areas()->ByName($areaName) or die("Invalid area: ${areaName}");
-my $service = $radiru->Services()->ByChannel($channel) or die("Invalid channel: ${channel}");
-my $prog    = $radiru->getProgramDay( $area, $service, $date );
+my $name     = 'radiru';
+my $provider = Net::Recorder::Provider->new($name)            or die("Failed to get ${name}");
+my $area = $provider->ConfigWeb()->Areas()->ByName($areaName) or die("Invalid area: ${areaName}");
+my $service = $provider->Services()->ByChannel($channel)      or die("Invalid channel: ${channel}");
+my $prog    = $provider->getProgramDay( $area, $service, $date ) or die("No Program\n");
 my $conf    = loadConfig();
-DumpFile( "$conf->{LogDir}/radiru_${areaName}_${channel}_$date.yml", $prog );
+DumpFile( "$conf->{LogDir}/${name}_${areaName}_${channel}_${date}.yml", $prog );
