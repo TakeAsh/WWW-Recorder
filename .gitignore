@@ -31,4 +31,4 @@ MYMETA.*
 /Net-Recorder-*
 
 log/
-conf/config.yml
+/share/conf/config.yml
