@@ -65,7 +65,11 @@ sub ID {
 sub Extra {
     my $self = shift;
     if (@_) {
-        $self->{Extra} = Net::Recorder::Program::Extra->new(@_);
+        my $package = "Net::Recorder::Provider::$self->{Provider}::Extra";
+        $self->{Extra}
+            = !$self->{Provider}
+            ? Net::Recorder::Program::Extra->new(@_)
+            : $package->new(@_);
     }
     return $self->{Extra};
 }
@@ -153,67 +157,6 @@ sub Keyword {
 sub stringify {
     my $self = shift;
     return Net::Recorder::Util::stringify( { %{$self} } );
-}
-
-sub keys {
-    my $self = shift;
-    return sort( grep { !startsWith( $_, '_' ) } keys( %{$self} ) );
-}
-
-package Net::Recorder::Program::Extra;
-use strict;
-use warnings;
-use Carp qw(croak);
-use utf8;
-use feature qw(say);
-use Encode;
-use YAML::Syck qw(LoadFile Dump);
-use Scalar::Util qw( reftype );
-use overload '""' => \&stringify;
-use FindBin::libs;
-use Net::Recorder::Util;
-use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
-
-$YAML::Syck::ImplicitUnicode = 1;
-
-sub new {
-    my $class = shift;
-    my $self  = {};
-    bless( $self, $class );
-    if ( @_ >= 2 ) {
-        $self->add( {@_} );
-    } elsif ( ( reftype( $_[0] ) || '' ) eq 'HASH' ) {
-        $self->add( $_[0] );
-    } else {
-        $self->parse( $_[0] );
-    }
-    return $self;
-}
-
-sub add {
-    my $self = shift;
-    my $args = shift or return;
-    map { $self->{$_} = $args->{$_}; } keys( %{$args} );
-}
-
-sub parse {
-    my $self = shift;
-    my $text = shift or return;
-    my $args = Net::Recorder::Util::fromString(
-        $text,
-        ITEM_SEPARATOR   => qr/;\s*/,
-        KEYVAL_SEPARATOR => qr/=/,
-    );
-    $self->add($args);
-}
-
-sub stringify {
-    my $self = shift;
-    return Net::Recorder::Util::stringify(
-        { %{$self} },
-        ITEM_SEPARATOR   => '; ',
-        KEYVAL_SEPARATOR => '=',
-    );
 }
 
 sub keys {

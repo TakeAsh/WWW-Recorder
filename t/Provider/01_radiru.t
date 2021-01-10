@@ -6,7 +6,7 @@ use utf8;
 use Test::More;
 use Test::More::UTF8;
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder::Provider::radiru;
+use Net::Recorder;
 
 subtest 'Areas' => sub {
     my $areas = new_ok(

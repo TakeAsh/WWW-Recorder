@@ -27,22 +27,27 @@ my $tt     = Template->new(
     }
 ) or die( Template->error() );
 
-my $query       = { map { $_ => [ $q->multi_param($_) ]; } $q->multi_param() };
-my $command     = $q->param('Command') || '';
-my $sortBy      = $q->param('SortBy')  || 'Status';
+my $query        = { Cookie => $cookie, map { $_ => [ $q->multi_param($_) ]; } $q->multi_param() };
+my $command      = $q->param('Command') || '';
+my $sortBy       = $q->param('SortBy')  || 'Status';
+my $showSkeleton = $cookie->{'ShowSkeleton'}
+    = defined( $q->param('ShowSkeleton') )
+    ? !!$q->param('ShowSkeleton')
+    : $cookie->{'ShowSkeleton'} || '';
 my @programUris = getProgramUris( $q->multi_param('ProgramUris') );
 my @programIds  = $q->multi_param('ProgramId');
+
 if ( !!@programUris ) {
     $query->{'ProgramUris_'} = [@programUris];
 }
-my @providers = Net::Recorder::Provider->providerNames();
+my @providers = grep { $showSkeleton || $_ ne 'skeleton' } Net::Recorder::Provider->providerNames();
 my $provider
     = $cookie->{'Provider'}
     = $q->param('Provider')
     || $cookie->{'Provider'}
     || $providers[0]
     || '';
-
+my $extraKeys = "Net::Recorder::Provider::${provider}"->keysShort();
 defined( my $pid = fork() ) or die("Fail to fork: $!");
 if ( !$pid ) {    # Child process
     if ( $command eq 'Add' && !!@programUris ) {
@@ -65,8 +70,9 @@ $tt->process(
         provider  => $provider,
         providers =>
             [ map { { name => $_, selected => $_ eq $provider ? 'selected' : '', } } @providers ],
-        info     => undef,                                         # Dump($query),
-        programs => getProgramsForDisplay( $provider, $sortBy ),
+        info      => undef,                     # Dump($query),
+        extraKeys => $extraKeys->getLabels(),
+        programs  => getProgramsForDisplay( $provider, $extraKeys->getKeys(), $sortBy ),
     },
     \$out
 ) or die( $tt->error );

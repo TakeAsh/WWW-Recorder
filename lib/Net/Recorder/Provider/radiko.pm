@@ -44,12 +44,11 @@ sub new {
     my $class  = shift;
     my $params = {@_};
     my $self   = $class->SUPER::_new(
+        %{$params},
         name            => 'radiko',
         program_pattern =>
             qr{^https://radiko.jp/#!/ts/(?<station>[^/]+)/(?<date>\d{8})(?<time>\d{6})\b},
-        keywords => $params->{'keywords'},
     );
-    $self->{AREA} = undef;
     bless( $self, $class );
     $self->area( $params->{'area'} );
     return $self;
@@ -249,16 +248,16 @@ sub getStream {
     my $now     = localtime;
     my $start   = $program->Start();
     my $end     = $program->End();
-    my $sleep   = ( $start - $now )->seconds - 10;
+    my $sleep   = ( $start - $now )->seconds - 5;
     if ( $sleep > 0 ) { sleep($sleep); }
-    my $station = $program->Extra()->{'Station'};
+    my $station = $program->Extra()->Station();
     my $detail  = $self->matchStart(
         $self->getInfos(
             api     => 'ProgramsByStation',
-            date    => $program->Extra()->{'Date'},
+            date    => $program->Extra()->Date(),
             station => $station,
         ),
-        $program->Extra()->{'DateTime'}
+        $program->Extra()->DateTime()
     ) || $program;
     my $fnameBase   = join( " ", $program->Title(), $station );
     my $fnameDetail = join( " ", $fnameBase,        $start->toPostfix() );
@@ -364,6 +363,53 @@ sub getStreamUris {
     return !$urls
         ? undef
         : $urls->{'url'};
+}
+
+package Net::Recorder::Provider::radiko::Extra;
+use strict;
+use warnings;
+use Carp qw(croak);
+use utf8;
+use feature qw( say );
+use Encode;
+use YAML::Syck qw( LoadFile DumpFile Dump );
+use FindBin::libs;
+use parent 'Net::Recorder::Program::Extra';
+use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
+
+$YAML::Syck::ImplicitUnicode = 1;
+
+__PACKAGE__->keysShort( 'Station', );
+
+sub new {
+    my $class = shift;
+    my $self  = $class->SUPER::new(@_);
+    bless( $self, $class );
+    return $self;
+}
+
+sub Station {
+    my $self = shift;
+    if (@_) { $self->{Station} = shift; }
+    return $self->{Station};
+}
+
+sub StationName {
+    my $self = shift;
+    if (@_) { $self->{StationName} = shift; }
+    return $self->{StationName};
+}
+
+sub Date {
+    my $self = shift;
+    if (@_) { $self->{Date} = shift; }
+    return $self->{Date};
+}
+
+sub DateTime {
+    my $self = shift;
+    if (@_) { $self->{DateTime} = shift; }
+    return $self->{DateTime};
 }
 
 1;

@@ -35,9 +35,10 @@ my $conf = loadConfig();
 my $sql  = loadConfig('sql');
 
 sub getProgramsForDisplay {
-    my $provider = shift or return;
-    my $sortBy   = shift || 'Status';
-    my $dbh      = connectDB( $conf->{'DbInfo'} );
+    my $provider  = shift or return;
+    my $extraKeys = shift or return;
+    my $sortBy    = shift || 'Status';
+    my $dbh       = connectDB( $conf->{'DbInfo'} );
     my $sth
         = $dbh->prepare_ex( join( ' ', $sql->{'GetProgramsForDisplay'}, $sql->{'SortBy'}{$sortBy} ),
         { Provider => $provider, } )
@@ -45,17 +46,19 @@ sub getProgramsForDisplay {
     $sth->execute() or die($DBI::errstr);
     my @programs = ();
     my $index    = 0;
+
     while ( my $row = $sth->fetchrow_hashref ) {
+        my $p    = Net::Recorder::Program->new($row);
         my $desc = join( "",
             map { '<div>' . ( $row->{$_} || '' ) . '</div>' } qw(Performer Description Info) );
-        push(
-            @programs,
-            {   index => ++$index,
-                Class => join( "_", 'STAT', $row->{'Status'}, $index % 2 ),
-                Desc  => $desc,
-                %{$row},
-            }
-        );
+        my $p2 = {
+            index  => ++$index,
+            Class  => join( "_", 'STAT', $row->{'Status'}, $index % 2 ),
+            Desc   => $desc,
+            Extra2 => [ map { $p->Extra()->{$_} // ''; } @{$extraKeys} ],
+            %{$p},
+        };
+        push( @programs, $p2 );
     }
     $sth->finish;
     $dbh->disconnect;

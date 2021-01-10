@@ -28,6 +28,9 @@
             <th>#</th>
             <th>Start</th>
             <th>Title</th>
+            [% FOREACH extraKey IN extraKeys %]
+            <th>[% extraKey %]</th>
+            [% END %]
             <th>Keyword</th>
             <th>Status</th>
             <th>Update</th>
@@ -46,6 +49,9 @@
               <a href="[% program.Uri %]" target="_blank" onclick="event.stopPropagation();">[% program.Title %]</a>
               <div class="ProgramDesc" onclick="event.stopPropagation();">[% program.Desc %]</div>
             </td>
+            [% FOREACH ex2 IN program.Extra2 %]
+            <td>[% ex2 %]</td>
+            [% END %]
             <td>[% program.Keyword %]</td>
             <td class="alignCenter">[% program.Status %]</td>
             <td>[% program.UpdateShort %]</td>

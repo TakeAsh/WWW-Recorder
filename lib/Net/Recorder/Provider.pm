@@ -34,8 +34,13 @@ sub providerNames {
 
 sub providers {
     my $class = shift;
-    my $conf  = loadConfig();
-    return map { $class->new( $_, keywords => $conf->{'Keywords'}, ); } @providerNames;
+    return map { $class->new($_); } @providerNames;
+}
+
+sub keysShort {
+    my $both  = shift;
+    my $class = ( ref($both) || $both ) or return;
+    return "${class}::Extra"->keysShort();
 }
 
 sub new {
@@ -49,8 +54,9 @@ sub new {
 sub _new {
     my $class  = shift;
     my $params = {@_};
+    my $conf   = loadConfig();
     my $self   = {};
-    $self->{CONF}            = loadConfig();
+    $self->{CONF}            = $conf;
     $self->{SQL}             = loadConfig('sql');
     $self->{NAME}            = $params->{'name'};
     $self->{PROGRAM_PATTERN} = $params->{'program_pattern'};
@@ -65,7 +71,7 @@ sub _new {
     $self->{REQUEST} = undef;
     $self->{LOG}     = [];
     bless( $self, $class );
-    $self->keywords( $params->{'keywords'} );
+    $self->keywords( $params->{'keywords'} || $conf->{'Keywords'} );
     return $self;
 }
 

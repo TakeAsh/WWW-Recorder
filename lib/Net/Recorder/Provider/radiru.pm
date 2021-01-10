@@ -24,10 +24,10 @@ sub new {
     my $class  = shift;
     my $params = {@_};
     my $self   = $class->SUPER::_new(
+        %{$params},
         name            => 'radiru',
         program_pattern =>
             qr{\b(?<channel>r1|r2|fm)\.(?<id>\d+).(?<y>\d{4})-(?<m>\d{2})-(?<d>\d{2})\.(?<area>\d{3})\b},
-        keywords => $params->{'keywords'},
     );
     $self->{SERVICES} = Net::Recorder::Provider::radiru::Services->new();
     bless( $self, $class );
@@ -208,24 +208,24 @@ sub getStream {
     my $now     = localtime;
     my $start   = $program->Start();
     my $end     = $program->End();
-    my $sleep   = ( $start - $now )->seconds - 10;
+    my $sleep   = ( $start - $now )->seconds - 5;
     if ( $sleep > 0 ) { sleep($sleep); }
     my $detail = $self->getProgramDetail(
-        {   area    => $program->Extra->{'AreaId'},
-            service => $program->Extra->{'ServiceId'},
+        {   area    => $program->Extra()->AreaId(),
+            service => $program->Extra()->ServiceId(),
             dateid  => $program->ID(),
         }
     ) || $program;
-    my $fnameBase   = join( " ", $program->Title(), $program->Extra()->{'ServiceChannel'} );
+    my $fnameBase   = join( " ", $program->Title(), $program->Extra()->ServiceChannel() );
     my $fnameDetail = join( " ", $fnameBase,        $start->toPostfix() );
     DumpFile( "${dest}/${fnameDetail}.yml", $detail );
     $program->Status('DOWNLOADING');
     $self->setStatus( $dbh, $program );
     $program->Status('FAILED');
     my $extra     = $program->Extra();
-    my $area      = $self->ConfigWeb()->Areas()->ByAreaKey( $extra->{'AreaId'} ) or return;
-    my $service   = $self->Services()->ByService( $extra->{'ServiceId'} )        or return;
-    my $streamUri = $area->{ $service->{'StreamKey'} }                           or return;
+    my $area      = $self->ConfigWeb()->Areas()->ByAreaKey( $extra->AreaId() ) or return;
+    my $service   = $self->Services()->ByService( $extra->ServiceId() )        or return;
+    my $streamUri = $area->{ $service->{'StreamKey'} }                         or return;
     my $success   = 0;
 
     while (1) {
@@ -401,6 +401,89 @@ sub ByChannel {
 sub getList {
     my $self = shift;
     return @{$self};
+}
+
+package Net::Recorder::Provider::radiru::Extra;
+use strict;
+use warnings;
+use Carp qw(croak);
+use utf8;
+use feature qw( say );
+use Encode;
+use YAML::Syck qw( LoadFile DumpFile Dump );
+use FindBin::libs;
+use parent 'Net::Recorder::Program::Extra';
+use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
+
+$YAML::Syck::ImplicitUnicode = 1;
+
+__PACKAGE__->keysShort( 'AreaName' => 'Area', 'ServiceChannel' => 'Channel', );
+
+sub new {
+    my $class = shift;
+    my $self  = $class->SUPER::new(@_);
+    bless( $self, $class );
+    return $self;
+}
+
+sub AreaId {
+    my $self = shift;
+    if (@_) { $self->{AreaId} = shift; }
+    return $self->{AreaId};
+}
+
+sub AreaName {
+    my $self = shift;
+    if (@_) { $self->{AreaName} = shift; }
+    return $self->{AreaName};
+}
+
+sub ServiceId {
+    my $self = shift;
+    if (@_) { $self->{ServiceId} = shift; }
+    return $self->{ServiceId};
+}
+
+sub ServiceName {
+    my $self = shift;
+    if (@_) { $self->{ServiceName} = shift; }
+    return $self->{ServiceName};
+}
+
+sub ServiceChannel {
+    my $self = shift;
+    if (@_) { $self->{ServiceChannel} = shift; }
+    return $self->{ServiceChannel};
+}
+
+sub SubTitle {
+    my $self = shift;
+    if (@_) { $self->{SubTitle} = shift; }
+    return $self->{SubTitle};
+}
+
+sub Content {
+    my $self = shift;
+    if (@_) { $self->{Content} = shift; }
+    return $self->{Content};
+}
+
+sub Music {
+    my $self = shift;
+    if (@_) { $self->{Music} = shift; }
+    return $self->{Music};
+}
+
+sub Free {
+    my $self = shift;
+    if (@_) { $self->{Free} = shift; }
+    return $self->{Free};
+}
+
+sub Rate {
+    my $self = shift;
+    if (@_) { $self->{Rate} = shift; }
+    return $self->{Rate};
 }
 
 1;
