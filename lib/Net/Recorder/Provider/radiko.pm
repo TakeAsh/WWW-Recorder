@@ -5,7 +5,6 @@ use utf8;
 use feature qw( say );
 use Encode;
 use YAML::Syck qw( LoadFile DumpFile Dump );
-use Time::Piece;
 use Time::Seconds;
 use XML::Simple;
 use MIME::Base64;
@@ -14,6 +13,7 @@ use List::Util qw(first);
 use Digest::SHA2;
 use FindBin::libs;
 use Net::Recorder::Util;
+use Net::Recorder::TimePiece;
 use Net::Recorder::Program;
 use parent 'Net::Recorder::Provider';
 
@@ -245,7 +245,7 @@ sub getStream {
     my $dbh     = shift or return;
     my $program = shift or return;
     my $dest    = shift or return;
-    my $now     = localtime;
+    my $now     = Net::Recorder::TimePiece->new();
     my $start   = $program->Start();
     my $end     = $program->End();
     my $sleep   = ( $start - $now )->seconds - 5;

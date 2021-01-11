@@ -6,6 +6,7 @@ use utf8;
 use feature qw(say);
 use Encode;
 use YAML::Syck qw(LoadFile Dump);
+use Time::Seconds;
 use Scalar::Util qw( reftype );
 use overload '""' => \&stringify;
 use parent 'Time::Piece';
