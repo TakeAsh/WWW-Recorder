@@ -27,7 +27,7 @@ sub new {
     return $self;
 }
 
-package Net::Recorder::Provider::skeleton::Extra;
+package Net::Recorder::Program::Extra::skeleton;
 use strict;
 use warnings;
 use Carp qw(croak);

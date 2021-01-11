@@ -30,25 +30,25 @@ subtest 'skeleton/Instance method/keysShort' => sub {
     is_deeply( $key1->getLabels(), [qw(series Seq.)],     'getLabels' );
 };
 
-subtest 'skeleton::Extra/Class method/keysShort' => sub {
-    my $key1 = 'Net::Recorder::Provider::skeleton::Extra'->keysShort();
+subtest 'Extra::skeleton/Class method/keysShort' => sub {
+    my $key1 = 'Net::Recorder::Program::Extra::skeleton'->keysShort();
     isa_ok( $key1, 'Net::Recorder::Program::Extra::Keys', '$key1' );
     is( $key1->stringify(), 'series=>; sequence=>Seq.', 'stringify' );
     is_deeply( $key1->getKeys(),   [qw(series sequence)], 'getKeys' );
     is_deeply( $key1->getLabels(), [qw(series Seq.)],     'getLabels' );
 };
 
-subtest 'skeleton::Extra' => sub {
+subtest 'Extra::skeleton' => sub {
     my $expected      = "sequence=1; series=series1; thumb=thumb1.jpg";
     my $expectedShort = "sequence=1; series=series1";
-    my $extra1        = new_ok( 'Net::Recorder::Provider::skeleton::Extra', undef, '$extra1' );
+    my $extra1        = new_ok( 'Net::Recorder::Program::Extra::skeleton', undef, '$extra1' );
     can_ok( $extra1, qw(new series sequence thumb) );
     is( $extra1->stringify(),      "",    'stringify' );
     is( $extra1->stringifyShort(), "",    'stringifyShort' );
     is( $extra1->series(),         undef, 'series' );
     is( $extra1->sequence(),       undef, 'sequence' );
     is( $extra1->thumb(),          undef, 'thumb' );
-    my $extra2 = new_ok( 'Net::Recorder::Provider::skeleton::Extra',
+    my $extra2 = new_ok( 'Net::Recorder::Program::Extra::skeleton',
         [ series => 'series1', sequence => 1, thumb => 'thumb1.jpg', ], '$extra2' );
     is( $extra2->stringify(),      $expected,      'stringify' );
     is( $extra2->stringifyShort(), $expectedShort, 'stringifyShort' );

@@ -403,7 +403,7 @@ sub getList {
     return @{$self};
 }
 
-package Net::Recorder::Provider::radiru::Extra;
+package Net::Recorder::Program::Extra::radiru;
 use strict;
 use warnings;
 use Carp qw(croak);

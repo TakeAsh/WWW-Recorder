@@ -365,7 +365,7 @@ sub getStreamUris {
         : $urls->{'url'};
 }
 
-package Net::Recorder::Provider::radiko::Extra;
+package Net::Recorder::Program::Extra::radiko;
 use strict;
 use warnings;
 use Carp qw(croak);

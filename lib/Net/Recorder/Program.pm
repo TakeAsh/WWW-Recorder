@@ -65,7 +65,7 @@ sub ID {
 sub Extra {
     my $self = shift;
     if (@_) {
-        my $package = "Net::Recorder::Provider::$self->{Provider}::Extra";
+        my $package = "Net::Recorder::Program::Extra::$self->{Provider}";
         $self->{Extra}
             = !$self->{Provider}
             ? Net::Recorder::Program::Extra->new(@_)

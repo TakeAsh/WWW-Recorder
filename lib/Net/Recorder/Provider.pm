@@ -40,7 +40,8 @@ sub providers {
 sub keysShort {
     my $both  = shift;
     my $class = ( ref($both) || $both ) or return;
-    return "${class}::Extra"->keysShort();
+    $class =~ /Provider::(?<subclass>[^:]+)$/ or return;
+    return "Net::Recorder::Program::Extra::$+{subclass}"->keysShort();
 }
 
 sub new {
