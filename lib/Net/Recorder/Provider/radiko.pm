@@ -262,7 +262,7 @@ sub getStream {
     my $fnameBase   = join( " ", $program->Title(), $station );
     my $fnameDetail = join( " ", $fnameBase,        $start->toPostfix() );
     DumpFile( "${dest}/${fnameDetail}.yml", $detail );
-    $program->Status('DOWNLOADING');
+    $program->Status('RECORDING');
     $self->setStatus( $dbh, $program );
     $program->Status('FAILED');
     my $success = 0;

@@ -5,6 +5,7 @@ use Carp qw(croak);
 use utf8;
 use feature qw(say);
 use Encode;
+use Const::Fast;
 use YAML::Syck qw(LoadFile Dump);
 use Scalar::Util qw( reftype );
 use overload '""' => \&stringify;
@@ -14,6 +15,8 @@ use Net::Recorder::TimePiece;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;
+
+const my @validStatuses => qw(RECORDING STANDBY WAITING DONE ABORT FAILED NO_INFO);
 
 sub new {
     my $class = shift;
@@ -141,7 +144,11 @@ sub Uri {
 sub Status {
     my $self = shift;
     if (@_) {
-        $self->{Status} = shift;
+        my $state = shift;
+        if ( !grep { $state eq $_ } @validStatuses ) {
+            croak("Invalid status: $state");
+        }
+        $self->{Status} = $state;
     }
     return $self->{Status};
 }

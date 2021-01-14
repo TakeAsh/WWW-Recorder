@@ -10,7 +10,7 @@ SetupDatabase: |
   INSERT INTO `States` 
     (`Status`, `Order`)
   VALUES 
-    ("DOWNLOADING", 1), ("STANDBY", 2), ("WAITING", 3), ("DONE", 4), 
+    ("RECORDING", 1), ("STANDBY", 2), ("WAITING", 3), ("DONE", 4), 
     ("ABORT", 99), ("FAILED", -1), ("NO_INFO", -2);
   DROP TABLE IF EXISTS `Programs`;
   CREATE TABLE `Programs` (
@@ -49,7 +49,7 @@ CheckProgram: |
   SELECT * 
   FROM `Programs` 
   WHERE `Provider` = :Provider-VARCHAR AND `ID` = :ID-VARCHAR 
-    AND `Status` IN ("DOWNLOADING", "STANDBY", "DONE", "ABORT");
+    AND `Status` IN ("RECORDING", "STANDBY", "DONE", "ABORT");
 GetProgramsForDisplay: |
   SELECT p.*, 
     DATE_FORMAT(p.`Start`, '%m/%d %H:%i') AS `StartShort`, 
