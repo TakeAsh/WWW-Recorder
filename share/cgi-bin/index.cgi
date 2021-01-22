@@ -41,12 +41,11 @@ if ( !!@programUris ) {
     $query->{'ProgramUris_'} = [@programUris];
 }
 my @providers = grep { $showSkeleton || $_ ne 'skeleton' } Net::Recorder::Provider->providerNames();
-my $provider
-    = $cookie->{'Provider'}
-    = $q->param('Provider')
-    || $cookie->{'Provider'}
-    || $providers[0]
-    || '';
+my $provider  = $q->param('Provider') || $cookie->{'Provider'};
+if ( !grep { $_ eq $provider } @providers ) {
+    $provider = $providers[0] || '';
+}
+$cookie->{'Provider'} = $provider;
 my $extraKeys = "Net::Recorder::Provider::${provider}"->keysShort();
 defined( my $pid = fork() ) or die("Fail to fork: $!");
 if ( !$pid ) {    # Child process
