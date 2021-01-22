@@ -43,6 +43,15 @@ subtest 'normalizeSubtitle' => sub {
         {   input    => 'EX EX1',
             expected => 'EX EX01',
         },
+        {   input    => 'STAGE 1',
+            expected => 'STAGE 01',
+        },
+        {   input    => 'Stage：1',
+            expected => 'Stage：01',
+        },
+        {   input    => 'Stage.1',
+            expected => 'Stage.01',
+        },
     );
     foreach my $testcase (@testcases) {
         is( normalizeSubtitle( $testcase->{'input'} ),
