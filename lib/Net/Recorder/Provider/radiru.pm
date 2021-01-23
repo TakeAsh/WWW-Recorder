@@ -208,7 +208,7 @@ sub getStream {
     my $now     = Net::Recorder::TimePiece->new();
     my $start   = $program->Start();
     my $end     = $program->End();
-    my $sleep   = ( $start - $now )->seconds - 5;
+    my $sleep   = ( $start - $now )->seconds;
     if ( $sleep > 0 ) { sleep($sleep); }
     my $detail = $self->getProgramDetail(
         {   area    => $program->Extra()->AreaId(),
