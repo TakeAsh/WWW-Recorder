@@ -31,7 +31,6 @@
   h3,
   h4,
   h5 {
-    color: #000000;
     background-color: #f0f0ff;
   }
 
@@ -148,7 +147,6 @@
   h3,
   h4,
   h5 {
-    color: #e4e4e4;
     background-color: #3f3f50;
   }
 
@@ -160,9 +158,77 @@
     background-color: #3f3f50;
   }
 
+  .HeaderArea {
+    background-color: #2f2f0f;
+  }
+
+  .tr_hover:hover {
+    box-shadow: inset 0px 0px 0px 6px #ff4040;
+  }
+
+  .tr_checked {
+    background-color: #700070 !important;
+  }
+
+  .STAT_RECORDING_0 {
+    background-color: #303050;
+  }
+
+  .STAT_RECORDING_1 {
+    background-color: #202040;
+  }
+
+  .STAT_STANDBY_0 {
+    background-color: #305060;
+  }
+
+  .STAT_STANDBY_1 {
+    background-color: #004050;
+  }
+
+  .STAT_WAITING_0 {
+    background-color: #505030;
+  }
+
+  .STAT_WAITING_1 {
+    background-color: #404000;
+  }
+
+  .STAT_DONE_0 {
+    background-color: #305030;
+  }
+
+  .STAT_DONE_1 {
+    background-color: #204020;
+  }
+
+  .STAT_ABORT_0 {
+    background-color: #503030;
+  }
+
+  .STAT_ABORT_1 {
+    background-color: #401010;
+  }
+
+  .STAT_FAILED_0 {
+    background-color: #603030;
+  }
+
+  .STAT_FAILED_1 {
+    background-color: #500000;
+  }
+
+  .STAT_NO_INFO_0 {
+    background-color: #503030;
+  }
+
+  .STAT_NO_INFO_1 {
+    background-color: #401010;
+  }
+
   .ProgramDesc {
     background-color: rgba(48, 48, 48, 0.95);
-    border: solid 2px #7fff7f;
+    border: solid 2px #006000;
   }
 }
 
