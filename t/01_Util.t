@@ -10,6 +10,9 @@ use Net::Recorder::Util;
 
 subtest 'normalizeSubtitle' => sub {
     my @testcases = (
+        {   input    => '第0話',
+            expected => '第0話',
+        },
         {   input    => '第1話',
             expected => '第01話',
         },
