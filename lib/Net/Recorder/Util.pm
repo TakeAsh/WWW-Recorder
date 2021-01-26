@@ -216,9 +216,10 @@ sub replaceSubtitle {
     my $num  = shift // '';
     my $post = shift || '';
     my $num2 = ja2num($num);
-    return !defined($num) || !defined($num2)
-        ? "${pre}${num}${post}"
-        : sprintf( '%s%02d%s', $pre, $num2, $post );
+    return
+          $num =~ /^\d+$/ ? sprintf( '%s%02d%s', $pre, $num, $post )
+        : defined($num2)  ? sprintf( '%s%02d%s', $pre, $num2, $post )
+        :                   "${pre}${num}${post}";
 }
 
 sub getAvailableDisk {
