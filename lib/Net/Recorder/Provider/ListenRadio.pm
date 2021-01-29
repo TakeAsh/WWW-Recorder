@@ -55,8 +55,18 @@ sub Channels {
 }
 
 sub getPrograms {
-    my $self = shift;
-    return undef;
+    my $self     = shift;
+    my @programs = ();
+    foreach my $channel ( @{ $self->Channels() } ) {
+        sleep(1);
+        my $rawPrograms = $self->Api()->Schedule( $channel->{'ChannelId'} ) or next;
+        my $progs       = $self->toPrograms($rawPrograms)                   or next;
+        my $filered     = $self->filter($progs)                             or next;
+        push( @programs, @{$filered} );
+    }
+    return !@programs
+        ? undef
+        : [@programs];
 }
 
 sub getProgramsFromUri {
@@ -65,41 +75,43 @@ sub getProgramsFromUri {
     my $total    = shift or return;
     my $uri      = shift or return;
     my $match    = shift or return;
-    my $now      = Net::Recorder::TimePiece->new();
-    my $id       = $now->strftime( $conf->{'FormatId'} );
     my @programs = ();
-
-    for ( my $i = 1; $i <= 3; ++$i ) {
-        my $id2   = join( "/", $id, $match->{'p1'}, $match->{'p2'}, "000${i}" );
-        my $uri   = sprintf( $conf->{'Uri'},   $match->{'p1'}, $i );
-        my $thumb = sprintf( $conf->{'Thumb'}, $match->{'p2'}, $i );
-        my $start = ( $now + ONE_MINUTE * ( $i * 3 + 10 ) )->strftime( $conf->{'FormatDateTime'} );
-        my $end   = ( $now + ONE_MINUTE * ( $i * 3 + 11 ) )->strftime( $conf->{'FormatDateTime'} );
-        push(
-            @programs,
-            Net::Recorder::Program->new(
-                {   Provider => $self->name(),
-                    ID       => $id2,
-                    Extra    => {
-                        series   => $conf->{'Series'},
-                        sequence => $i,
-                        thumb    => $thumb,
-                    },
-                    Start       => $start,
-                    End         => $end,
-                    Duration    => 60,
-                    Title       => join( " ",      $conf->{'Series'}, "#${i}", $id2 ),
-                    Description => join( "<br>\n", $id2,              $uri,    $thumb ),
-                    Info        => undef,
-                    Performer   => undef,
-                    Uri         => $uri,
-                }
-            )
-        );
-    }
     return !@programs
         ? undef
         : [@programs];
+}
+
+sub toPrograms {
+    my $self        = shift;
+    my $rawPrograms = shift or return;
+    return [ map { $self->toProgram($_); } @{$rawPrograms} ];
+}
+
+sub toProgram {
+    my $self = shift;
+    my $p    = shift or return;
+    return Net::Recorder::Program->new(
+        Provider => $self->name(),
+        ID       => $p->{'ProgramScheduleId'},
+        Extra    => {
+            StationId   => $p->{'StationId'},
+            StationName => $p->{'StationName'},
+            ProgramId   => $p->{'ProgramId'},
+        },
+        Start       => $self->toDateTime( $p->{'StartDate'} ),
+        End         => $self->toDateTime( $p->{'EndDate'} ),
+        Title       => $p->{'ProgramName'},
+        Description => $p->{'ProgramSummary'},
+    );
+}
+
+sub toDateTime {
+    my $self     = shift;
+    my $datetime = shift or return;
+    return
+          $datetime =~ s/^(\d{4})(\d{2})(\d{2})$/$1-$2-$3/                        ? $datetime
+        : $datetime =~ s/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})$/$1-$2-$3 $4:$5:00/ ? $datetime
+        :                                                                           $datetime;
 }
 
 sub record {
