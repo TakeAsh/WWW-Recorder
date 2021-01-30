@@ -169,6 +169,9 @@ sub getStream {
         $start = Net::Recorder::TimePiece->new();
         my $duration = ( $end - $start )->seconds;
         if ( $duration < 0 ) { last; }
+        if ( $duration >= 2 * 60 * 60 ) {    # over 2hr
+            $duration = 1 * 60 * 60;         # limit 1hr
+        }
         my $fname      = join( " ", $fnameBase, $start->toPostfix() );
         my $pathWork   = "${dest}/.${fname}.m4a";
         my $pathFinish = "${dest}/${fname}.m4a";
