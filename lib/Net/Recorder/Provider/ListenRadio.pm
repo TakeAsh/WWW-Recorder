@@ -59,9 +59,10 @@ sub getPrograms {
     my @programs = ();
     foreach my $channel ( @{ $self->Channels() } ) {
         sleep(1);
-        my $rawPrograms = $self->Api()->Schedule( $channel->{'ChannelId'} ) or next;
-        my $progs       = $self->toPrograms($rawPrograms)                   or next;
-        my $filered     = $self->filter($progs)                             or next;
+        my $id          = $channel->{'ChannelId'};
+        my $rawPrograms = $self->Api()->Schedule($id)            or next;
+        my $progs       = $self->toPrograms( $rawPrograms, $id ) or next;
+        my $filered     = $self->filter($progs)                  or next;
         push( @programs, @{$filered} );
     }
     return !@programs
@@ -84,7 +85,8 @@ sub getProgramsFromUri {
 sub toPrograms {
     my $self        = shift;
     my $rawPrograms = shift or return;
-    return [ map { $self->toProgram($_); } @{$rawPrograms} ];
+    my $id          = shift or return;
+    return [ map { $self->toProgram( { %{$_}, ChannelId => $id } ); } @{$rawPrograms} ];
 }
 
 sub toProgram {
@@ -94,6 +96,7 @@ sub toProgram {
         Provider => $self->name(),
         ID       => $p->{'ProgramScheduleId'},
         Extra    => {
+            ChannelId   => $p->{'ChannelId'},
             StationId   => $p->{'StationId'},
             StationName => $p->{'StationName'},
             ProgramId   => $p->{'ProgramId'},
@@ -150,23 +153,42 @@ sub getStream {
     my $now     = Net::Recorder::TimePiece->new();
     my $start   = $program->Start();
     my $end     = $program->End();
-    my $sleep   = ( $start - $now )->seconds - 5;
+    my $sleep   = ( $start - $now )->seconds;
     if ( $sleep > 0 ) { sleep($sleep); }
-    my $fnameBase = join( " ", $program->Title(), $program->Provider() );
+    my $extra     = $program->Extra();
+    my $fnameBase = join( " ", $program->Title(), $extra->StationName() );
     my $fnameInfo = join( " ", $fnameBase,        $start->toPostfix() );
-    DumpFile( "${dest}/${fnameInfo}_Info.yml", $program );
+    DumpFile( "${dest}/${fnameInfo}.yml", $program );
     $program->Status('RECORDING');
     $self->setStatus( $dbh, $program );
     $program->Status('FAILED');
+    my $channel = $self->Channels()->byId( $extra->ChannelId() ) or return;
     my $success = 0;
 
     while (1) {
         $start = Net::Recorder::TimePiece->new();
         my $duration = ( $end - $start )->seconds;
         if ( $duration < 0 ) { last; }
-        my $fnameMain = join( " ", $fnameBase, $start->toPostfix() );
-        sleep(70);
-        DumpFile( "${dest}/${fnameMain}_Main.yml", $program );
+        my $fname      = join( " ", $fnameBase, $start->toPostfix() );
+        my $pathWork   = "${dest}/.${fname}.m4a";
+        my $pathFinish = "${dest}/${fname}.m4a";
+        my $cmd        = sprintf(
+            '%s -y -i %s%s%s -t %d -bsf:a aac_adtstoasc -c copy -movflags faststart %s%s%s',
+            $ffmpeg, QUOTE, $channel->{'ChannelHls'},
+            QUOTE,   $duration + 60,
+            QUOTE,   $pathWork, QUOTE
+        );
+        my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf )
+            = run( command => $cmd, verbose => 0, timeout => 120 * 60 );
+        my $messages = integrateErrorMessages( $error_message, $stdout_buf, $stderr_buf );
+
+        if ( !( -f $pathWork ) ) {
+            $self->log( $messages->{'All'} );
+            $self->log("Failed to get stream");
+            return 0;
+        }
+        chmod( 0666, $pathWork );
+        rename( $pathWork, $pathFinish );
         $success = 1;
         $program->Status('DONE');
     }
@@ -294,6 +316,7 @@ use feature qw( say );
 use Encode;
 use YAML::Syck qw( LoadFile DumpFile Dump );
 use FindBin::libs;
+use Net::Recorder::Util;
 use parent 'Net::Recorder::Program::Extra';
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
@@ -305,10 +328,17 @@ sub new {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
     bless( $self, $class );
+    if ( $self->{ChannelId} )   { $self->ChannelId( $self->{ChannelId} ); }
     if ( $self->{StationId} )   { $self->StationId( $self->{StationId} ); }
     if ( $self->{StationName} ) { $self->StationName( $self->{StationName} ); }
     if ( $self->{ProgramId} )   { $self->ProgramId( $self->{ProgramId} ); }
     return $self;
+}
+
+sub ChannelId {
+    my $self = shift;
+    if (@_) { $self->{ChannelId} = shift; }
+    return $self->{ChannelId};
 }
 
 sub StationId {
@@ -319,7 +349,7 @@ sub StationId {
 
 sub StationName {
     my $self = shift;
-    if (@_) { $self->{StationName} = shift; }
+    if (@_) { $self->{StationName} = normalizeTitle(shift); }
     return $self->{StationName};
 }
 
