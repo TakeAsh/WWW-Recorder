@@ -250,14 +250,15 @@ sub getStream {
     my $end     = $program->End();
     my $sleep   = ( $start - $now )->seconds;
     if ( $sleep > 0 ) { sleep($sleep); }
-    my $station = $program->Extra()->Station();
+    my $extra   = $program->Extra();
+    my $station = $extra->Station();
     my $detail  = $self->matchStart(
         $self->getInfos(
             api     => 'ProgramsByStation',
-            date    => $program->Extra()->Date(),
+            date    => $extra->Date(),
             station => $station,
         ),
-        $program->Extra()->DateTime()
+        $extra->DateTime()
     ) || $program;
     my $fnameBase   = join( " ", $program->Title(), $station );
     my $fnameDetail = join( " ", $fnameBase,        $start->toPostfix() );

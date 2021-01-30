@@ -210,19 +210,19 @@ sub getStream {
     my $end     = $program->End();
     my $sleep   = ( $start - $now )->seconds;
     if ( $sleep > 0 ) { sleep($sleep); }
+    my $extra  = $program->Extra();
     my $detail = $self->getProgramDetail(
-        {   area    => $program->Extra()->AreaId(),
-            service => $program->Extra()->ServiceId(),
+        {   area    => $extra->AreaId(),
+            service => $extra->ServiceId(),
             dateid  => $program->ID(),
         }
     ) || $program;
-    my $fnameBase   = join( " ", $program->Title(), $program->Extra()->ServiceChannel() );
+    my $fnameBase   = join( " ", $program->Title(), $extra->ServiceChannel() );
     my $fnameDetail = join( " ", $fnameBase,        $start->toPostfix() );
     DumpFile( "${dest}/${fnameDetail}.yml", $detail );
     $program->Status('RECORDING');
     $self->setStatus( $dbh, $program );
     $program->Status('FAILED');
-    my $extra     = $program->Extra();
     my $area      = $self->ConfigWeb()->Areas()->ByAreaKey( $extra->AreaId() ) or return;
     my $service   = $self->Services()->ByService( $extra->ServiceId() )        or return;
     my $streamUri = $area->{ $service->{'StreamKey'} }                         or return;
