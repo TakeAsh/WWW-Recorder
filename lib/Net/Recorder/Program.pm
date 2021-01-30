@@ -32,6 +32,12 @@ sub new {
     if ( exists( $self->{'Extra'} ) ) { $self->Extra( $self->{'Extra'} ); }
     if ( exists( $self->{'Start'} ) ) { $self->Start( $self->{'Start'} ); }
     if ( exists( $self->{'End'} ) )   { $self->End( $self->{'End'} ); }
+    if ( $self->Start() && $self->End() && !exists( $self->{'Duration'} ) ) {
+        $self->Duration( ( $self->End() - $self->Start() )->seconds );
+    }
+    if ( $self->Start() && $self->Duration() && !exists( $self->{'End'} ) ) {
+        $self->End( $self->Start() + $self->Duration() );
+    }
     if ( exists( $self->{'Title'} ) ) { $self->Title( $self->{'Title'} ); }
     return $self;
 }
