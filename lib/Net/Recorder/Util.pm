@@ -39,11 +39,11 @@ our @EXPORT_OK = qw(
 $YAML::Syck::ImplicitUnicode = 1;
 
 my $regPrePost
-    = qr{(?<pre>第)(?<num>[^-\s\+~～「」『』\(\)]+?)(?<post>話|章|問|回|ワン|箱|局|席|限|弾|週|憑目|幕|羽|斤|夜|球|膳|怪|R|曲|楽章|奏|番|の怪|首|滑走|殺|面)};
+    = qr{(?<pre>第)(?<num>[^-\s\+~～「」『』【】\(\)]+?)(?<post>話|章|問|回|ワン|箱|局|席|限|弾|週|憑目|幕|羽|斤|夜|球|膳|怪|R|曲|楽章|奏|番|の怪|首|滑走|殺|面)};
 my $regPostOnly
-    = qr{(?<num>[^-\s\+~～「」『』\(\)]+?)(?<post>話|ノ怪|限目|時限目|時間目|ノ銃|Fr|発目|組目|bit|品目|本目|杯目|さやめ|着目|幕)};
+    = qr{(?<num>[^-\s\+~～「」『』【】\(\)]+?)(?<post>話|ノ怪|限目|時限目|時間目|ノ銃|Fr|発目|組目|bit|品目|本目|杯目|さやめ|着目|幕|合目)};
 my $regPreOnly
-    = qr{(?<pre>(#|Lesson|page\.|EPISODE\.?|COLLECTION|session|PHASE|巻ノ|ドキドキ\N{U+2661}|その|Stage[：\.]?|エピソード|File\.?|trip|trap：|ページ|act\.|Step|Line\.|ろ~る|説|ブラッド|\sEX)\s*)(?<num>[^-\s\+~～「」『』\(\)]+)}i;
+    = qr{(?<pre>(#|Lesson|page\.|EPISODE\.?|COLLECTION|session|PHASE|巻ノ|ドキドキ\N{U+2661}|その|Stage[：\.]?|エピソード|File\.?|trip|trap：|ページ|act\.|Step|Line\.|ろ~る|説|ブラッド|\sEX)\s*)(?<num>[^-\s\+~～「」『』【】\(\)]+)}i;
 my $json       = JSON::XS->new->utf8(0)->allow_nonref(1);
 my $cookieName = encodeUtf8('NetRecorder');
 
@@ -204,19 +204,22 @@ sub normalizeSubtitle {
     my $title = shift or return;
     $title = normalizeTitle($title);
     foreach my $reg ( $regPrePost, $regPostOnly, $regPreOnly ) {
-        $title =~ s/$reg/replaceSubtitle($+{pre}, $+{num}, $+{post})/eg;
+        if ( $title =~ s/$reg/replaceSubtitle($+{pre}, $+{num}, $+{post})/eg ) {
+            last;
+        }
     }
     return $title;
 }
 
 sub replaceSubtitle {
     my $pre  = shift || '';
-    my $num  = shift || '';
+    my $num  = shift // '';
     my $post = shift || '';
     my $num2 = ja2num($num);
-    return !$num || !$num2
-        ? "${pre}${num}${post}"
-        : sprintf( '%s%02d%s', $pre, $num2, $post );
+    return
+          $num =~ /^\d+$/               ? sprintf( '%s%02d%s', $pre, $num, $post )
+        : defined($num2) && $num2 ne '' ? sprintf( '%s%02d%s', $pre, $num2, $post )
+        :                                 "${pre}${num}${post}";
 }
 
 sub getAvailableDisk {

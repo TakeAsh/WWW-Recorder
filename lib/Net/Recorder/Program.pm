@@ -32,6 +32,12 @@ sub new {
     if ( exists( $self->{'Extra'} ) ) { $self->Extra( $self->{'Extra'} ); }
     if ( exists( $self->{'Start'} ) ) { $self->Start( $self->{'Start'} ); }
     if ( exists( $self->{'End'} ) )   { $self->End( $self->{'End'} ); }
+    if ( $self->Start() && $self->End() && !exists( $self->{'Duration'} ) ) {
+        $self->Duration( ( $self->End() - $self->Start() )->seconds );
+    }
+    if ( $self->Start() && $self->Duration() && !exists( $self->{'End'} ) ) {
+        $self->End( $self->Start() + $self->Duration() );
+    }
     if ( exists( $self->{'Title'} ) ) { $self->Title( $self->{'Title'} ); }
     return $self;
 }
@@ -106,7 +112,7 @@ sub Title {
     if (@_) {
         $self->{Title} = normalizeSubtitle(shift);
     }
-    return $self->{Title};
+    return $self->{Title} || '';
 }
 
 sub Description {
@@ -114,7 +120,7 @@ sub Description {
     if (@_) {
         $self->{Description} = shift;
     }
-    return $self->{Description};
+    return $self->{Description} || '';
 }
 
 sub Info {
@@ -122,7 +128,7 @@ sub Info {
     if (@_) {
         $self->{Info} = shift;
     }
-    return $self->{Info};
+    return $self->{Info} || '';
 }
 
 sub Performer {
@@ -130,7 +136,7 @@ sub Performer {
     if (@_) {
         $self->{Performer} = shift;
     }
-    return $self->{Performer};
+    return $self->{Performer} || '';
 }
 
 sub Uri {
@@ -138,7 +144,7 @@ sub Uri {
     if (@_) {
         $self->{Uri} = shift;
     }
-    return $self->{Uri};
+    return $self->{Uri} || '';
 }
 
 sub Status {
@@ -150,7 +156,7 @@ sub Status {
         }
         $self->{Status} = $state;
     }
-    return $self->{Status};
+    return $self->{Status} || '';
 }
 
 sub Keyword {
@@ -158,7 +164,7 @@ sub Keyword {
     if (@_) {
         $self->{Keyword} = shift;
     }
-    return $self->{Keyword};
+    return $self->{Keyword} || '';
 }
 
 sub stringify {

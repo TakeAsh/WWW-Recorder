@@ -108,6 +108,19 @@ subtest 'Program/new' => sub {
             $testcase->{'name'}
         );
     }
+    is( Net::Recorder::Program->new( %{$input}, End => '2021/02/03 01:23:45' )->stringify(),
+        "Duration\t1302\nEnd\t2021-02-03 01:23:45\n${common}",
+        'auto calc Duration'
+    );
+    is( Net::Recorder::Program->new( %{$input}, Duration => 5 * 60 )->stringify(),
+        "Duration\t300\nEnd\t2021-02-03 01:07:03\n${common}",
+        'auto calc End'
+    );
+    is( Net::Recorder::Program->new( %{$input}, End => '2021/02/04 02:03:04', Duration => 10 * 60 )
+            ->stringify(),
+        "Duration\t600\nEnd\t2021-02-04 02:03:04\n${common}",
+        'keep Duration/End'
+    );
 };
 
 subtest 'Program/Extra' => sub {
