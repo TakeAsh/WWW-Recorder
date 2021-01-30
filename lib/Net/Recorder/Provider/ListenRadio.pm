@@ -86,12 +86,12 @@ sub toPrograms {
     my $self        = shift;
     my $rawPrograms = shift or return;
     my $id          = shift or return;
-    return [ map { $self->toProgram( { %{$_}, ChannelId => $id } ); } @{$rawPrograms} ];
+    return [ map { $self->toProgram( %{$_}, ChannelId => $id, ); } @{$rawPrograms} ];
 }
 
 sub toProgram {
     my $self = shift;
-    my $p    = shift or return;
+    my $p    = {@_};
     return Net::Recorder::Program->new(
         Provider => $self->name(),
         ID       => $p->{'ProgramScheduleId'},
