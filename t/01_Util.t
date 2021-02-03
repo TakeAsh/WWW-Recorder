@@ -76,6 +76,9 @@ subtest 'normalizeSubtitle' => sub {
         {   input    => 'Stage.1',
             expected => 'Stage.01',
         },
+        {   input    => '週替わり番組　第２木曜日の夜（第２）、 hiro-t（第４）、第５木曜の夜（第５）',
+            expected => '週替わり番組 第2木曜日の夜(第2)、 hiro-t(第4)、第5木曜の夜(第5)',
+        },
     );
     foreach my $testcase (@testcases) {
         is( normalizeSubtitle( $testcase->{'input'} ),
