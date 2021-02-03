@@ -201,10 +201,11 @@ sub normalizeTitle {
 }
 
 sub normalizeSubtitle {
-    my $title = shift or return;
+    my $title   = shift or return;
+    my $handler = shift;
     $title = normalizeTitle($title);
     foreach my $reg ( $regPrePost, $regPostOnly, $regPreOnly ) {
-        if ( $title =~ s/$reg/replaceSubtitle($+{pre}, $+{num}, $+{post})/eg ) {
+        if ( $title =~ s/$reg/replaceSubtitle($+{pre},$+{num},$+{post},$handler,$&,$title)/eg ) {
             last;
         }
     }
@@ -212,9 +213,17 @@ sub normalizeSubtitle {
 }
 
 sub replaceSubtitle {
-    my $pre  = shift || '';
-    my $num  = shift // '';
-    my $post = shift || '';
+    my $pre     = shift || '';
+    my $num     = shift // '';
+    my $post    = shift || '';
+    my $handler = shift;
+    my $match   = shift || '';
+    my $full    = shift || '';
+    local $SIG{__WARN__} = sub {
+        my $message = shift;
+        if ( ref($handler) ne 'CODE' ) { return; }
+        &{$handler}( $message, $match, $full );
+    };
     my $num2 = ja2num($num);
     return
           $num =~ /^\d+$/               ? sprintf( '%s%02d%s', $pre, $num, $post )

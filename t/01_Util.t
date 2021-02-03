@@ -80,8 +80,12 @@ subtest 'normalizeSubtitle' => sub {
             expected => '週替わり番組 第2木曜日の夜(第2)、 hiro-t(第4)、第5木曜の夜(第5)',
         },
     );
+    my $handler = sub {
+        my ( $message, $match, $full ) = @_;
+        note("${message}: ${match} / ${full}");
+    };
     foreach my $testcase (@testcases) {
-        is( normalizeSubtitle( $testcase->{'input'} ),
+        is( normalizeSubtitle( $testcase->{'input'}, $handler ),
             $testcase->{'expected'},
             $testcase->{'input'}
         );
