@@ -90,8 +90,19 @@ sub toPrograms {
 }
 
 sub toProgram {
-    my $self = shift;
-    my $p    = {@_};
+    my $self    = shift;
+    my $p       = {@_};
+    my $handler = &{
+        sub {
+            my $program = join( "/",
+                $self->name(),
+                map { $_ . '=' . $p->{$_} } qw(ChannelId StationName ProgramScheduleId) );
+            return sub {
+                my ( $message, $match, $full ) = @_;
+                $self->log("${message}: ${match} / ${full}\n$program");
+            };
+        }
+    }();
     return Net::Recorder::Program->new(
         Provider => $self->name(),
         ID       => $p->{'ProgramScheduleId'},
@@ -103,7 +114,7 @@ sub toProgram {
         },
         Start       => $self->toDateTime( $p->{'StartDate'} ),
         End         => $self->toDateTime( $p->{'EndDate'} ),
-        Title       => $p->{'ProgramName'},
+        Title       => [ $p->{'ProgramName'}, Handler => $handler, ],
         Description => $p->{'ProgramSummary'},
     );
 }

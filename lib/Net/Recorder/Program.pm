@@ -110,7 +110,14 @@ sub Duration {
 sub Title {
     my $self = shift;
     if (@_) {
-        $self->{Title} = normalizeSubtitle(shift);
+        my $arg = shift;
+        if ( ref($arg) eq 'ARRAY' ) {
+            my $title   = shift( @{$arg} );
+            my $options = { @{$arg} };
+            $self->{Title} = normalizeSubtitle( $title, $options->{'Handler'} );
+        } else {
+            $self->{Title} = normalizeSubtitle($arg);
+        }
     }
     return $self->{Title} || '';
 }

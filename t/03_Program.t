@@ -121,6 +121,20 @@ subtest 'Program/new' => sub {
         "Duration\t600\nEnd\t2021-02-04 02:03:04\n${common}",
         'keep Duration/End'
     );
+    my $titleHandler = sub {
+        my ( $message, $match, $full ) = @_;
+        note("${message}: ${match} / ${full}");
+    };
+    my $expected2 = join( "\n",
+        "ID\t001",         "Provider\tskeleton", "Start\t2021-02-03 01:02:03",
+        "Status\tWAITING", "Title\t週替わり番組 第2木曜日の夜" );
+    is( Net::Recorder::Program->new( %{$input}, Title => '週替わり番組　第２木曜日の夜' )->stringify(),
+        $expected2, 'Title warning (ignore warning)' );
+    is( Net::Recorder::Program->new( %{$input},
+            Title => [ '週替わり番組　第２木曜日の夜', Handler => $titleHandler, ] )->stringify(),
+        $expected2,
+        'Title warning (handle warning)'
+    );
 };
 
 subtest 'Program/Extra' => sub {
