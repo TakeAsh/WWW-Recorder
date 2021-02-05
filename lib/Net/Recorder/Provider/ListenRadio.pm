@@ -16,13 +16,7 @@ use parent 'Net::Recorder::Provider';
 $YAML::Syck::ImplicitUnicode = 1;
 
 my $package = __PACKAGE__;
-my $conf    = {
-    FormatId       => '%Y%m%d-%H%M00',
-    FormatDateTime => '%Y/%m/%d %H:%M:00',
-    Series         => 'Dummy',
-    Thumb          => 'https://example.com/Dummy/thumb/%s_%02d.jpg',
-    Uri            => 'https://example.com/Dummy/story/%s_%03d/',
-};
+my $conf    = {};
 
 my $ffmpeg = can_run('ffmpeg') or die("ffmpeg is not found");
 
@@ -116,6 +110,12 @@ sub toProgram {
         End         => $self->toDateTime( $p->{'EndDate'} ),
         Title       => [ $p->{'ProgramName'}, Handler => $handler, ],
         Description => $p->{'ProgramSummary'},
+        Uri         => $self->Api()->request(
+            'timetable',
+            {   psid   => $p->{'ProgramScheduleId'},
+                option => 'multi',
+            }
+        ),
     );
 }
 
@@ -247,7 +247,7 @@ sub new {
     return $self;
 }
 
-sub call {
+sub request {
     my $self  = shift;
     my $api   = shift or return;
     my $query = shift || {};
@@ -255,8 +255,14 @@ sub call {
     $uri =~ s/\{Api\}/${api}/;
     $uri = URI->new($uri);
     $uri->query_form( %{$query} );
-    my $res = $self->{AGENT}->get($uri);
+    return $uri;
+}
 
+sub call {
+    my $self  = shift;
+    my $api   = shift or return;
+    my $query = shift || {};
+    my $res   = $self->{AGENT}->get( $self->request( $api, $query ) );
     if ( !$res->is_success ) {
         croak( "Failed to call API: ${api} " . $res->status_line );
     }
