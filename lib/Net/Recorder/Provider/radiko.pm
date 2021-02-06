@@ -172,9 +172,8 @@ sub toProgram {
     $p->{'desc'} =~ s{\\"}{"}g;
     my $start = $self->toDateTime( $p->{'ft'} );
     my $end   = $self->toDateTime( $p->{'to'} );
-    my $title = normalizeSubtitle( $self->toText( $p->{'title'} ) );
     my $sha2  = new Digest::SHA2;
-    $sha2->add( $p->{'station'}, $start, $end, $title );
+    $sha2->add( $p->{'station'}, $start, $end );
     return Net::Recorder::Program->new(
         Provider => $self->name(),
         ID       => $self->toText( $sha2->b64digest() ),    # $p->{'prog_id'} is not rigid
@@ -187,7 +186,7 @@ sub toProgram {
         Start       => $start,
         End         => $end,
         Duration    => $self->toText( $p->{'dur'} ),
-        Title       => $title,
+        Title       => $self->toText( $p->{'title'} ),
         Description => $self->toText( $p->{'desc'} ),
         Info        => $self->toText( $p->{'info'} ),
         Performer   => $self->toText( $p->{'pfm'} ),
