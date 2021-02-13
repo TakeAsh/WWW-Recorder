@@ -46,7 +46,8 @@ if ( !grep { $_ eq $provider } @providers ) {
     $provider = $providers[0] || '';
 }
 $cookie->{'Provider'} = $provider;
-my $extraKeys = "Net::Recorder::Provider::${provider}"->keysShort();
+my $extraKeys      = "Net::Recorder::Provider::${provider}"->keysShort();
+my $extraKeyLabels = $extraKeys->getLabels();
 defined( my $pid = fork() ) or die("Fail to fork: $!");
 if ( !$pid ) {    # Child process
     if ( $command eq 'Add' && !!@programUris ) {
@@ -69,9 +70,10 @@ $tt->process(
         provider  => $provider,
         providers =>
             [ map { { name => $_, selected => $_ eq $provider ? 'selected' : '', } } @providers ],
-        info      => undef,                     # Dump($query),
-        extraKeys => $extraKeys->getLabels(),
-        programs  => getProgramsForDisplay( $provider, $extraKeys->getKeys(), $sortBy ),
+        info         => undef,                    # Dump($query),
+        numOfColumns => 7 + @{$extraKeyLabels},
+        extraKeys    => $extraKeyLabels,
+        programs     => getProgramsForDisplay( $provider, $extraKeys->getKeys(), $sortBy ),
     },
     \$out
 ) or die( $tt->error );

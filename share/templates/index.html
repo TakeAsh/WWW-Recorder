@@ -38,16 +38,15 @@
         </thead>
         <tbody>
           [% FOREACH program IN programs %]
-          <tr class="[% program.Class %] tr_hover" onclick="toggleCheckbox(this)">
+          <tr class="[% program.Class %] tr_hover" onclick="nextTrStatus(this)">
             <td>
               <input type="checkbox" name="ProgramId" value="[% program.ID %]" onclick="event.stopPropagation();">
             </td>
             <td class="alignCenter">[% program.index %]</td>
             <td class="alignCenter"><span title="[% program.StartShort %] - [% program.EndShort %]">[%
                 program.StartShort %]</span></td>
-            <td class="ProgramTitle">
+            <td>
               <a href="[% program.Uri %]" target="_blank" onclick="event.stopPropagation();">[% program.Title %]</a>
-              <div class="ProgramDesc" onclick="event.stopPropagation();">[% program.Desc %]</div>
             </td>
             [% FOREACH ex2 IN program.Extra2 %]
             <td>[% ex2 %]</td>
@@ -55,6 +54,9 @@
             <td>[% program.Keyword %]</td>
             <td class="alignCenter">[% program.Status %]</td>
             <td>[% program.UpdateShort %]</td>
+          </tr>
+          <tr class="ProgramDesc">
+            <td colspan="[% numOfColumns %]">[% program.Desc %]</td>
           </tr>
           [% END %]
         </tbody>

@@ -234,8 +234,8 @@
 
 body {
   line-height: 120%;
-  margin-left: 0.5em;
-  margin-right: 0.5em;
+  margin-left: 1em;
+  margin-right: 1em;
   overflow-wrap: break-word;
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
@@ -357,19 +357,16 @@ img.emoji {
   left: 0;
 }
 
-.ProgramTitle {
-  position: relative;
-}
-
 .ProgramDesc {
-  position: absolute;
   display: none;
-  padding: 0.4em;
-  left: 0%;
-  top: 95%;
-  z-index: 10;
 }
 
-.ProgramTitle:hover .ProgramDesc {
-  display: block;
+.tr_show_detail {}
+
+.tr_hover:hover+.ProgramDesc {
+  display: table-row;
+}
+
+.tr_show_detail+.ProgramDesc {
+  display: table-row;
 }
