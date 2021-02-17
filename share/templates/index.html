@@ -6,10 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>[% title %]</title>
   <link rel="stylesheet" type="text/css" media="screen" href="NetRecorder.css" />
-  <script src="NetRecorder.js"></script>
 </head>
 
-<body onload="init()">
+<body>
   <h1><a href="./" name="top">[% title %]</a></h1>
   [% IF info %]
   <div>
@@ -38,7 +37,7 @@
         </thead>
         <tbody>
           [% FOREACH program IN programs %]
-          <tr class="[% program.Class %] tr_hover" onclick="nextTrStatus(this)">
+          <tr class="[% program.Class %] tr_hover">
             <td>
               <input type="checkbox" name="ProgramId" value="[% program.ID %]" onclick="event.stopPropagation();">
             </td>
@@ -65,7 +64,7 @@
   </div>
   <div class="HeaderArea">
     <div id="Menu" class="MenuPart">
-      <select id="selectMenu" onchange="changeMenu()">
+      <select id="selectMenu">
         <option value="-" selected>Menu</option>
         <option value="Add">Add</option>
         <option value="Sort">Sort</option>
@@ -82,15 +81,15 @@
         </form>
       </div>
       <div id="Menu_Sort" class="MenuArea">
-        <button onclick="sortBy('Status')">By Status</button>
-        <button onclick="sortBy('Title')">By Title</button>
-        <button onclick="sortBy('Update')">By Update</button>
+        <button id="Button_Sort_ByStatus" data-by="Status">By Status</button>
+        <button id="Button_Sort_ByTitle" data-by="Title">By Title</button>
+        <button id="Button_Sort_ByUpdate" data-by="Update">By Update</button>
       </div>
       <div id="Menu_Abort" class="MenuArea">
-        <button onclick="abort()">Abort</button>
+        <button id="Button_Command_Abort" data-command="Abort">Abort</button>
       </div>
       <div id="Menu_Remove" class="MenuArea">
-        <button onclick="remove()">Remove</button>
+        <button id="Button_Command_Remove" data-command="Remove">Remove</button>
       </div>
       <div id="Menu_Provider" class="MenuArea">
         <form id="formProvider" name="formProvider" method="POST" action="./" enctype="multipart/form-data">
@@ -107,7 +106,7 @@
   <a name="Bottom"></a>
   <script onload="javascript: twemoji.parse(document.body);" src="//twemoji.maxcdn.com/twemoji.min.js"
     type="text/javascript"></script>
-  <script src="NetRecorder.js" type="text/javascript"></script>
+  <script type="module" src="NetRecorder.js"></script>
 </body>
 
 </html>

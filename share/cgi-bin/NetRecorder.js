@@ -1,115 +1,103 @@
 ﻿/**
  * @file NetRecorder.js
 */
-{
-  'use strict';
 
-  class CyclicEnum extends Array {
-    constructor(...args) {
-      super();
-      args.forEach((key, index) => Object.defineProperty(this, key, {
-        value: this[index] = Object.freeze({
-          toString: () => key,
-          index: index,
-          next: () => this[(index + 1) % args.length],
-        }),
-        enumerable: false,
-      }));
-      Object.freeze(this);
-    }
+import { CyclicEnum } from './modules/CyclicEnum.js';
+import { getNodesByXpath } from './modules/Util.js';
 
-    get(key) {
-      return this.hasOwnProperty(key) ?
-        this[key] :
-        this[0];
-    }
+const d = document;
+const TrStatuses = new CyclicEnum(
+  'UNCHECKED_HIDE_DETAIL',
+  'CHECKED_HIDE_DETAIL',
+  'CHECKED_SHOW_DETAIL',
+);
+
+class NetRecorder {
+
+  static run() {
+    this.prepareProgram();
+    this.prepareMenu();
   }
 
-  const d = document;
-  const TrStatuses = new CyclicEnum(
-    'UNCHECKED_HIDE_DETAIL',
-    'CHECKED_HIDE_DETAIL',
-    'CHECKED_SHOW_DETAIL',
-  );
-
-  function init() {
+  static prepareProgram() {
     getNodesByXpath('//input[@type="checkbox" and @name="ProgramId"]')
-      .forEach(checkbox => checkbox.addEventListener('change', showSelection));
+      .forEach(checkbox => checkbox.addEventListener('change', showSelection, false));
+
+    getNodesByXpath('//tr[contains(@class, "tr_hover")]')
+      .forEach(tr => tr.addEventListener('click', nextTrStatus, false));
   }
 
-  function changeMenu() {
-    const elmSelectMenu = d.getElementById('selectMenu');
-    const selectedMenu = elmSelectMenu.options[elmSelectMenu.selectedIndex].value;
-    Array.from(elmSelectMenu.options)
-      .map(option => option.value)
-      .forEach(menu => {
-        const elmMenu = d.getElementById('Menu_' + menu);
-        if (!elmMenu) { return; }
-        if (menu == selectedMenu) {
-          elmMenu.classList.add('ShowMenu');
-        } else {
-          elmMenu.classList.remove('ShowMenu');
-        }
+  static prepareMenu() {
+    d.getElementById('selectMenu')
+      .addEventListener('change', changeMenu, false);
+
+    ['ByStatus', 'ByTitle', 'ByUpdate']
+      .forEach(key => {
+        d.getElementById('Button_Sort_' + key)
+          .addEventListener('click', sortBy, false);
+      });
+
+    ['Abort', 'Remove']
+      .forEach(key => {
+        d.getElementById('Button_Command_' + key)
+          .addEventListener('click', command, false);
       });
   }
+}
 
-  function sortBy(field) {
-    d.getElementById('SortBy').value = field;
-    d.getElementById('formQueue').submit();
-  }
+NetRecorder.run();
 
-  function nextTrStatus(elm) {
-    const checkbox = elm.getElementsByTagName('input')[0];
-    switch (elm.dataset.trStatus = TrStatuses.get(elm.dataset.trStatus).next()) {
-      case TrStatuses.UNCHECKED_HIDE_DETAIL:
-        checkbox.checked = false;
-        elm.classList.remove('tr_show_detail');
-        break;
-      case TrStatuses.CHECKED_HIDE_DETAIL:
-        checkbox.checked = true;
-        elm.classList.remove('tr_show_detail');
-        break;
-      case TrStatuses.CHECKED_SHOW_DETAIL:
-        checkbox.checked = true;
-        elm.classList.add('tr_show_detail');
-        break;
-    }
-    checkbox.dispatchEvent(new CustomEvent('change'));
+function showSelection(event) {
+  if (this.checked) {
+    this.parentNode.parentNode.classList.add('tr_checked');
+  } else {
+    this.parentNode.parentNode.classList.remove('tr_checked');
+    this.parentNode.parentNode.classList.remove('tr_show_detail');
+    this.parentNode.parentNode.dataset.trStatus = TrStatuses.UNCHECKED_HIDE_DETAIL;
   }
+}
 
-  function showSelection(event) {
-    if (this.checked) {
-      this.parentNode.parentNode.classList.add('tr_checked');
-    } else {
-      this.parentNode.parentNode.classList.remove('tr_checked');
-      this.parentNode.parentNode.classList.remove('tr_show_detail');
-      this.parentNode.parentNode.dataset.trStatus = TrStatuses.UNCHECKED_HIDE_DETAIL;
-    }
+function nextTrStatus(event) {
+  const checkbox = this.getElementsByTagName('input')[0];
+  switch (this.dataset.trStatus = TrStatuses.get(this.dataset.trStatus).next()) {
+    case TrStatuses.UNCHECKED_HIDE_DETAIL:
+      checkbox.checked = false;
+      this.classList.remove('tr_show_detail');
+      break;
+    case TrStatuses.CHECKED_HIDE_DETAIL:
+      checkbox.checked = true;
+      this.classList.remove('tr_show_detail');
+      break;
+    case TrStatuses.CHECKED_SHOW_DETAIL:
+      checkbox.checked = true;
+      this.classList.add('tr_show_detail');
+      break;
   }
+  checkbox.dispatchEvent(new CustomEvent('change'));
+}
 
-  function abort() {
-    d.getElementById('Command').value = 'Abort';
-    d.getElementById('formQueue').submit();
-  }
+function changeMenu() {
+  const elmSelectMenu = d.getElementById('selectMenu');
+  const selectedMenu = elmSelectMenu.options[elmSelectMenu.selectedIndex].value;
+  Array.from(elmSelectMenu.options)
+    .map(option => option.value)
+    .forEach(menu => {
+      const elmMenu = d.getElementById('Menu_' + menu);
+      if (!elmMenu) { return; }
+      if (menu == selectedMenu) {
+        elmMenu.classList.add('ShowMenu');
+      } else {
+        elmMenu.classList.remove('ShowMenu');
+      }
+    });
+}
 
-  function remove() {
-    d.getElementById('Command').value = 'Remove';
-    d.getElementById('formQueue').submit();
-  }
+function sortBy(event) {
+  d.getElementById('SortBy').value = this.dataset.by;
+  d.getElementById('formQueue').submit();
+}
 
-  function getNodesByXpath(xpath, context) {
-    const itr = d.evaluate(
-      xpath,
-      context || d,
-      null,
-      XPathResult.ORDERED_NODE_ITERATOR_TYPE,
-      null
-    );
-    let nodes = [];
-    let node = null;
-    while (node = itr.iterateNext()) {
-      nodes.push(node);
-    }
-    return nodes;
-  }
+function command(event) {
+  d.getElementById('Command').value = this.dataset.command;
+  d.getElementById('formQueue').submit();
 }
