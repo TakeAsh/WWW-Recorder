@@ -177,7 +177,7 @@ sub store {
         foreach my $key ( $program->keys ) {
             my $max = $columns->{$key}{'CHARACTER_MAXIMUM_LENGTH'} || 0;
             if ( $max && ( my $len = length( $program->{$key} ) || 0 ) >= $max ) {
-                $self->log( "'$key' too long, $len" . $program->{$key} );
+                $self->log( "'$key' too long, $len", $program->{$key} );
                 $program->{$key} = substr( $program->{$key}, 0, $max );
             }
         }
@@ -258,9 +258,9 @@ sub record {
 }
 
 sub log {
-    my $self    = shift;
-    my $message = shift or return;
-    push( @{ $self->{LOG} }, $message );
+    my $self = shift;
+    if ( !@_ ) { return; }
+    push( @{ $self->{LOG} }, @_ );
 }
 
 sub flush {

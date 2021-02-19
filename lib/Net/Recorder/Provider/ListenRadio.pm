@@ -93,7 +93,7 @@ sub toProgram {
                 map { $_ . '=' . $p->{$_} } qw(ChannelId StationName ProgramScheduleId) );
             return sub {
                 my ( $message, $match, $full ) = @_;
-                $self->log("${message}: ${match} / ${full}\n$program");
+                $self->log( "${message}: ${match} / ${full}", $program );
             };
         }
     }();
@@ -197,8 +197,7 @@ sub getStream {
         my $messages = integrateErrorMessages( $error_message, $stdout_buf, $stderr_buf );
 
         if ( !( -f $pathWork ) ) {
-            $self->log( $messages->{'All'} );
-            $self->log("Failed to get stream");
+            $self->log( "Failed to get stream", $messages->{'All'} );
             return 0;
         }
         chmod( 0666, $pathWork );

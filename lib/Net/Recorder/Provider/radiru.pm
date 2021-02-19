@@ -248,8 +248,7 @@ sub getStream {
         my $messages = integrateErrorMessages( $error_message, $stdout_buf, $stderr_buf );
 
         if ( !( -f $pathWork ) ) {
-            $self->log( $messages->{'All'} );
-            $self->log("Failed to get stream");
+            $self->log( "Failed to get stream", $messages->{'All'} );
             return 0;
         }
         chmod( 0666, $pathWork );
