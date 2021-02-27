@@ -159,14 +159,10 @@ sub removePrograms {
 sub exportAll {
     my @providers = Net::Recorder::Provider->providerNames();
     my $dbh       = connectDB( $conf->{'DbInfo'} );
-    my $columns   = [
-        map      { $_->{'COLUMN_NAME'} }
-            sort { $a->{'ORDINAL_POSITION'} <=> $b->{'ORDINAL_POSITION'} }
-            @{ getColumnsArray( $dbh, 'Programs' ) }
-    ];
-    my $sth = $dbh->prepare_ex( $sql->{'GetProgramsForExport'} ) or die($DBI::errstr);
-    my $t   = Net::Recorder::TimePiece->new();
-    my $now = $t->toPostfix();
+    my $columns   = getColumnsNames( $dbh, 'Programs' );
+    my $sth       = $dbh->prepare_ex( $sql->{'GetProgramsForExport'} ) or die($DBI::errstr);
+    my $t         = Net::Recorder::TimePiece->new();
+    my $now       = $t->toPostfix();
     foreach my $provider (@providers) {
         my $programs = getProgramsForExport( $sth, $provider ) or next;
         savePrograms( $provider, $now, $columns, $programs );

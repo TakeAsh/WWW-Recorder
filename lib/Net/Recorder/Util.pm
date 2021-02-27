@@ -27,7 +27,7 @@ our @EXPORT = qw(
     loadConfig saveConfig
     decodeUtf8 encodeUtf8 getCookie setCookie
     trim unifyLf startsWith endsWith toJson decodeJson
-    connectDB getColumnsArray getColumnsHash
+    connectDB getColumnsArray getColumnsHash getColumnsNames
     integrateErrorMessages
     normalizeTitle normalizeSubtitle replaceSubtitle
     getAvailableDisk
@@ -167,6 +167,13 @@ sub getColumnsHash {
     my $tableName = shift                               or return;
     my $columns   = getColumnsArray( $dbh, $tableName ) or return;
     return { map { $_->{'COLUMN_NAME'} => $_; } @{$columns} };
+}
+
+sub getColumnsNames {
+    my $dbh       = shift                               or return;
+    my $tableName = shift                               or return;
+    my $columns   = getColumnsArray( $dbh, $tableName ) or return;
+    return [ map { $_->{'COLUMN_NAME'} } @{$columns} ];
 }
 
 sub integrateErrorMessages {
