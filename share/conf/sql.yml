@@ -77,6 +77,10 @@ SetStatus: |
   UPDATE `Programs` 
   SET `Status` = :Status-VARCHAR 
   WHERE `Provider` = :Provider-VARCHAR AND `ID` = :ID-VARCHAR;
+RetryPrograms: |
+  UPDATE `Programs` 
+  SET `Status` = "WAITING" 
+  WHERE `Provider` = :Provider-VARCHAR AND `ID` in ( :ID+-VARCHAR );
 AbortPrograms: |
   UPDATE `Programs` 
   SET `Status` = "ABORT" 

@@ -52,6 +52,8 @@ defined( my $pid = fork() ) or die("Fail to fork: $!");
 if ( !$pid ) {    # Child process
     if ( $command eq 'Add' && !!@programUris ) {
         addPrograms(@programUris);
+    } elsif ( $command eq 'Retry' && !!@programIds ) {
+        retryPrograms( $provider, [@programIds] );
     } elsif ( $command eq 'Abort' && !!@programIds ) {
         abortPrograms( $provider, [@programIds] );
     } elsif ( $command eq 'Remove' && !!@programIds ) {

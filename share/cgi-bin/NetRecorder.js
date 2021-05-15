@@ -37,7 +37,7 @@ class NetRecorder {
           .addEventListener('click', sortBy, false);
       });
 
-    ['Abort', 'Remove']
+    ['Retry', 'Abort', 'Remove']
       .forEach(key => {
         d.getElementById('Button_Command_' + key)
           .addEventListener('click', command, false);

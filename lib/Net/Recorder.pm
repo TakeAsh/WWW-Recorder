@@ -24,6 +24,7 @@ our @EXPORT = qw(
     getProgramUris addPrograms
     getPrograms
     record
+    retryPrograms
     abortPrograms
     removePrograms
     exportAll
@@ -127,6 +128,19 @@ sub record {
         }
     }
     while ( wait() >= 0 ) { sleep(1); }
+}
+
+sub retryPrograms {
+    my $provider   = shift or return;
+    my $programIds = shift || [];
+    my $dbh        = connectDB( $conf->{'DbInfo'} );
+    my $sth
+        = $dbh->prepare_ex( $sql->{'RetryPrograms'}, { Provider => $provider, ID => $programIds, } )
+        or die($DBI::errstr);
+    my $rv = $sth->execute() or die($DBI::errstr);
+    $sth->finish;
+    $dbh->disconnect;
+    return $rv;
 }
 
 sub abortPrograms {
