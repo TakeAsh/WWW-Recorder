@@ -66,7 +66,7 @@ GetProgramsForRecord: |
   SELECT p.*
   FROM `Programs` p
   LEFT JOIN `States` s ON p.`Status` = s.`Status`
-  WHERE p.`Provider` = :Provider-VARCHAR AND p.`Status` in ("WAITING", "FAILED") AND p.`Start` <= ADDTIME(now(), "00:05:00") 
+  WHERE p.`Provider` = :Provider-VARCHAR AND p.`Status` in ("WAITING") AND p.`Start` <= ADDTIME(now(), "00:05:00") 
   ORDER BY s.`Order`, p.`Start`, p.`End`, p.`Title`;
 GetProgramsForExport: |
   SELECT p.* 
