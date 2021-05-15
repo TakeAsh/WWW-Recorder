@@ -7,6 +7,7 @@ use Encode;
 use YAML::Syck qw(LoadFile DumpFile Dump);
 use Time::Seconds;
 use IPC::Cmd qw(can_run run QUOTE);
+use Digest::SHA2;
 use FindBin::libs "Bin=${FindBin::RealBin}";
 use Net::Recorder::Util;
 use Net::Recorder::TimePiece;
@@ -97,17 +98,21 @@ sub toProgram {
             };
         }
     }();
+    my $start = $self->toDateTime( $p->{'StartDate'} );
+    my $end   = $self->toDateTime( $p->{'EndDate'} );
+    my $sha2  = new Digest::SHA2;
+    $sha2->add( $p->{'ChannelId'}, $start, $end );
     return Net::Recorder::Program->new(
         Provider => $self->name(),
-        ID       => $p->{'ProgramScheduleId'},
+        ID       => $sha2->b64digest(),    # $p->{'ProgramScheduleId'} is not rigid
         Extra    => {
             ChannelId   => $p->{'ChannelId'},
             StationId   => $p->{'StationId'},
             StationName => $p->{'StationName'},
             ProgramId   => $p->{'ProgramId'},
         },
-        Start       => $self->toDateTime( $p->{'StartDate'} ),
-        End         => $self->toDateTime( $p->{'EndDate'} ),
+        Start       => $start,
+        End         => $end,
         Title       => [ $p->{'ProgramName'}, Handler => $handler, ],
         Description => $p->{'ProgramSummary'},
         Uri         => $self->Api()->request(
