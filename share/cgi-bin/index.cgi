@@ -50,6 +50,8 @@ my $extraKeys      = "Net::Recorder::Provider::${provider}"->keysShort();
 my $extraKeyLabels = $extraKeys->getLabels();
 defined( my $pid = fork() ) or die("Fail to fork: $!");
 if ( !$pid ) {    # Child process
+    close(STDOUT);
+    close(STDIN);
     if ( $command eq 'Add' && !!@programUris ) {
         addPrograms(@programUris);
     } elsif ( $command eq 'Retry' && !!@programIds ) {
