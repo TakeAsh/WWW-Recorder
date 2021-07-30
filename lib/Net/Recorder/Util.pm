@@ -26,7 +26,7 @@ use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 our @EXPORT = qw(
     loadConfig saveConfig
     decodeUtf8 encodeUtf8 getCookie setCookie
-    trim unifyLf startsWith endsWith toJson decodeJson
+    trim unifyLf trimTextInBytes startsWith endsWith toJson decodeJson
     connectDB getColumnsArray getColumnsHash getColumnsNames
     integrateErrorMessages
     normalizeTitle normalizeSubtitle replaceSubtitle
@@ -113,6 +113,19 @@ sub unifyLf {
     my $text = shift or return '';
     $text =~ s/\r\n/\n/g;
     $text =~ s/\r/\n/g;
+    return $text;
+}
+
+# [perlの文字列をバイト数で切り取るヤツ - itochin2の日記（仮）](http://itochin2.hatenablog.com/entry/2014/05/16/135830)
+sub trimTextInBytes {
+    my $text = shift or return '';
+    my $len  = shift or return '';
+    if ( length( encode( 'UTF-8', $text ) ) <= $len ) {
+        return $text;
+    }
+    while ( length( encode( 'UTF-8', $text ) ) > $len ) {
+        $text = substr( $text, 0, -1 );
+    }
     return $text;
 }
 
