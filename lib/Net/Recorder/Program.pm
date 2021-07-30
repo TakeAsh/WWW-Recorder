@@ -122,6 +122,11 @@ sub Title {
     return $self->{Title} || '';
 }
 
+sub TitleLimited {
+    my $self = shift;
+    return trimTextInBytes( $self->{Title} || '', 250 );    # Linux filename limit
+}
+
 sub Description {
     my $self = shift;
     if (@_) {
