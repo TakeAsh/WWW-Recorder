@@ -94,3 +94,6 @@ GetColumns: |
   FROM    `INFORMATION_SCHEMA`.`COLUMNS` 
   WHERE   `TABLE_NAME` = :TableName-VARCHAR
   ORDER BY `ORDINAL_POSITION`;
+DeleteOldPrograms:
+  DELETE FROM `Programs` 
+  WHERE `Provider` in ( :Provider+-VARCHAR ) AND `Start` < :Start-VARCHAR
