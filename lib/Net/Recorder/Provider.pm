@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use utf8;
+use bytes qw();
 use feature qw(say);
 use Encode;
 use YAML::Syck qw(LoadFile Dump);
@@ -136,6 +137,10 @@ sub request {
     $uri =~ s/\{$_\}/$params->{$_}/ for keys( %{$params} );
     $uri = URI->new($uri);
     $uri->query_form( %{$query} );
+
+    if ( uc($method) eq 'POST' ) {
+        $headers = { %{$headers}, 'Content-Length' => bytes::length($content) || 0, };
+    }
     $self->{REQUEST} = HTTP::Request->new(
         $method => $uri,
         [ %{$headers} ],
