@@ -26,6 +26,7 @@ sub new {
         : $t =~ /^\d+:\d+:\d+$/              ? $class->strptime( $t, '%H:%M:%S' )
         : $t =~ /^\d+-\d+-\d+$/              ? $class->strptime( $t, '%Y-%m-%d' )
         : $t =~ /^\d+-\d+-\d+\s\d+:\d+:\d+$/ ? $class->strptime( $t, '%Y-%m-%d %H:%M:%S' )
+        : $t =~ /^\d+$/                      ? $class->localtime($t)
         :                                      croak("Must be '[yyyy-mm-dd] [HH:]MM:SS': ${t}");
     my $self = $class->localtime($t2);
     bless( $self, $class );
