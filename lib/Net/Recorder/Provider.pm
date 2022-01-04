@@ -270,7 +270,7 @@ sub log {
 
 sub flush {
     my $self = shift;
-    say join( "\n", @{ $self->{LOG} } );
+    if ( fileno(STDOUT) ) { say join( "\n", @{ $self->{LOG} } ); }
     $self->{LOG} = [];
 }
 
