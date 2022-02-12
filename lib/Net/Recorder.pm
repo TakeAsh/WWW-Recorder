@@ -69,7 +69,14 @@ sub getProgramsForDisplay {
 }
 
 sub getProgramUris {
-    my %uris = map { trim($_) => 1; } map { split( /\n/, $_ ) } @_;
+    my %uris = map { trim($_) => 1; }
+        map {
+        my $uri = $_;
+        $uri =~ /^(?<pre>.*)\[(?<start>.+)-(?<end>.+)\](?<post>.*)$/
+            ? ( map { "$+{pre}${_}$+{post}"; } ( $+{'start'} .. $+{'end'} ) )
+            : $uri
+        }
+        map { split( /\n/, $_ ) } @_;
     return sort( keys(%uris) );
 }
 
