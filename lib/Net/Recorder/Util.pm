@@ -19,6 +19,7 @@ use File::Share ':all';
 use File::HomeDir;
 use Filesys::DfPortable;
 use List::Util qw(first);
+use IPC::Cmd qw(can_run run QUOTE);
 use DBIx::NamedParams;
 use FindBin::libs "Bin=${FindBin::RealBin}";
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
@@ -31,6 +32,7 @@ our @EXPORT = qw(
     integrateErrorMessages
     normalizeTitle normalizeSubtitle replaceSubtitle
     getAvailableDisk
+    sysQuote optimizeMovie
 );
 our @EXPORT_OK = qw(
     stringify fromString
@@ -46,6 +48,7 @@ my $regPreOnly
     = qr{(?<pre>(#|Lesson|page\.|EPISODE\.?|COLLECTION|session|PHASE|巻ノ|ドキドキ\N{U+2661}|その|Stage[：\.]?|エピソード|File\.?|trip|trap：|ページ|act\.|Step|Line\.|ろ~る|説|ブラッド|\sEX|CHAPTER)\s*)(?<num>[^-\s\+~～「」『』【】\(\)]+)}i;
 my $json       = JSON::XS->new->utf8(0)->allow_nonref(1);
 my $cookieName = encodeUtf8('NetRecorder');
+my $ffmpeg     = can_run('ffmpeg') or die("ffmpeg is not found");
 
 sub loadConfig {
     my $fname = shift || 'config';
@@ -265,6 +268,27 @@ sub getAvailableDisk {
     return !$dir
         ? undef
         : $dir->{'dir'};
+}
+
+sub sysQuote {
+    return QUOTE . $_[0] . QUOTE;
+}
+
+sub optimizeMovie {
+    my $work        = shift or return;
+    my $out         = shift or return;
+    my $message_ref = shift or return;
+    my $cmd         = sprintf( '%s -y -i %s -bsf:a aac_adtstoasc -c copy -movflags faststart %s',
+        $ffmpeg, sysQuote($work), sysQuote($out) );
+    my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf )
+        = run( command => $cmd, verbose => 0 );
+    unlink($work);
+    if ( !( -f $out ) ) {
+        ${$message_ref} = integrateErrorMessages( $error_message, $stdout_buf, $stderr_buf );
+        return 0;
+    }
+    chmod( 0666, $out );
+    return 1;
 }
 
 sub stringify {
