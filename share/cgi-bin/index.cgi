@@ -74,6 +74,7 @@ $tt->process(
         provider  => $provider,
         providers =>
             [ map { { name => $_, selected => $_ eq $provider ? 'selected' : '', } } @providers ],
+        sortBy       => $sortBy,
         info         => undef,                    # Dump($query),
         numOfColumns => 7 + @{$extraKeyLabels},
         extraKeys    => $extraKeyLabels,

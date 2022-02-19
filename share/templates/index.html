@@ -19,7 +19,7 @@
     <form id="formQueue" name="formQueue" method="POST" action="./" enctype="multipart/form-data">
       <input id="Command" type="hidden" name="Command" value="Show">
       <input id="Provider" type="hidden" name="Provider" value="[% provider %]">
-      <input id="SortBy" name="SortBy" type="hidden" value="Status">
+      <input id="SortBy" type="hidden" name="SortBy" value="[% sortBy %]">
       <table class="sticky_table" border="1">
         <thead>
           <tr>
@@ -77,6 +77,8 @@
     <div class="MenuPart">
       <div id="Menu_Add" class="MenuArea">
         <form id="formNewPrograms" name="formNewPrograms" method="POST" action="./" enctype="multipart/form-data">
+          <input type="hidden" name="Provider" value="[% provider %]">
+          <input type="hidden" name="SortBy" value="[% sortBy %]">
           <input type="submit" name="Command" value="Add"><br>
           <textarea name="ProgramUris" rows="5" cols="80"></textarea>
         </form>
