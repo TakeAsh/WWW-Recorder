@@ -137,27 +137,32 @@ sub record {
     my $self     = shift;
     my $programs = shift or return;
     my @programs = @{$programs};
-    my $dest     = getAvailableDisk('2GiB');
-    if ( !$dest ) {
-        $self->log("Disk full");
-        return;
-    }
-    my $index = 0;
+    my $dbh      = connectDB( $self->{CONF}{'DbInfo'} );
+    my $index    = 0;
     foreach my $program (@programs) {
         ++$index;
+        my $dest = getAvailableDisk('2GiB');
+        if ( !$dest ) {
+            $self->log(
+                sprintf( "%d/%d\tDisk full: %s", $index, scalar(@programs), $program->Title() ) );
+            $program->Status('WAITING');
+            $self->setStatus( $dbh, $program );
+            next;
+        }
         $self->log( sprintf( "%d/%d\t%s", $index, scalar(@programs), $program->Title() ) );
         my $pid = fork;
         if ( !defined($pid) ) {
             $self->log("Failed to fork");
         } elsif ( !$pid ) {    # Child process
-            my $dbh = connectDB( $self->{CONF}{'DbInfo'} );
+            my $dbhChild = connectDB( $self->{CONF}{'DbInfo'} );
             $program->Status('FAILED');
-            $self->getStream( $dbh, $program, $dest );
-            $self->setStatus( $dbh, $program );
-            $dbh->disconnect;
+            $self->getStream( $dbhChild, $program, $dest );
+            $self->setStatus( $dbhChild, $program );
+            $dbhChild->disconnect;
             exit;
         }
     }
+    $dbh->disconnect;
     while ( wait() >= 0 ) { sleep(1); }
 }
 
