@@ -149,6 +149,14 @@ sub request {
     return $self;
 }
 
+sub encodeForm {
+    my $self  = shift;
+    my $form  = shift or return;
+    my @keys  = sort keys( %{$form} );
+    my @pairs = map { uri_escape_utf8($_) . '=' . uri_escape_utf8( $form->{$_} ) } @keys;
+    return encodeUtf8( join( '&', @pairs ) );
+}
+
 sub call {
     my $self = shift;
     if ( !$self->{REQUEST} ) {
@@ -259,6 +267,12 @@ sub setStatus {
 sub record {
     my $self     = shift;
     my $programs = shift or return;
+    return undef;
+}
+
+sub makeFilenameRawBase {
+    my $self  = shift;
+    my $match = shift or return;
     return undef;
 }
 
