@@ -37,7 +37,7 @@ sub setup {
     $tmp->{'RootPassword'} = '';
     inputOne( $tmp, 'root password', 'RootPassword' );
     setupMysql( $db, $tmp );
-    saveConfig($conf);
+    saveConfig( 'config', $conf );
 }
 
 sub makePassword {

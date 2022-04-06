@@ -68,9 +68,13 @@ sub loadConfig {
 }
 
 sub saveConfig {
-    my $conf = shift or return;
-    $conf->{'DbInfo'}{'DSN'} = 'DBI:{Driver}:host={Server};port={Port};database={DB};';
-    my $file = "${FindBin::RealBin}/conf/config.yml";
+    my $fname = shift or return;
+    my $conf  = shift or return;
+    if ( $fname eq 'config' ) {
+        $conf->{'DbInfo'}{'DSN'} = 'DBI:{Driver}:host={Server};port={Port};database={DB};';
+    }
+    my $dir  = dist_dir('Net-Recorder');
+    my $file = "${dir}/conf/${fname}.yml";
     DumpFile( $file, $conf );
 }
 
@@ -259,12 +263,12 @@ sub getAvailableDisk {
     my $byte  = parse_bytes($space) or die("Invalid Space: ${space}");
     my $conf  = loadConfig();
     my $dir   = first { $_->{'bavail'} > $byte }
-    map {
+        map {
         my $info = dfportable($_) or die("$_: $!");
         {   dir    => $_,
             bavail => $info->{'bavail'},
         };
-    } grep { $_ && -d "$_/" } @{ $conf->{'SaveDirs'} };
+        } grep { $_ && -d "$_/" } @{ $conf->{'SaveDirs'} };
     return !$dir
         ? undef
         : $dir->{'dir'};
