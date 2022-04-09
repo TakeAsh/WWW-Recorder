@@ -88,19 +88,33 @@ sub getPrograms {
 }
 
 sub getProgramsFromUri {
-    my $self     = shift;
-    my $index    = shift or return;
-    my $total    = shift or return;
-    my $uri      = shift or return;
-    my $match    = shift or return;
-    my @programs = ();
-    my $infos    = $self->getInfos(
+    my $self  = shift;
+    my $index = shift                                 or return;
+    my $total = shift                                 or return;
+    my $uri   = shift                                 or return;
+    my $match = shift                                 or return;
+    my $prog  = $self->getProgramInfo( $uri, $match ) or return;
+    return [$prog];
+}
+
+sub getProgramInfo {
+    my $self  = shift;
+    my $uri   = shift                                    or return;
+    my $match = shift                                    or return;
+    my $info  = $self->getProgramInfoRaw( $uri, $match ) or return;
+    return $self->toProgram($info);
+}
+
+sub getProgramInfoRaw {
+    my $self  = shift;
+    my $uri   = shift or return;
+    my $match = shift or return;
+    my $infos = $self->getInfos(
         api     => 'ProgramsByStation',
         date    => $match->{'date'},
         station => $match->{'station'},
     ) or return;
-    my $prog = $self->matchStart( $infos, $match->{'date'} . $match->{'time'} ) or return;
-    return [ $self->toProgram($prog) ];
+    return $self->matchStart( $infos, $match->{'date'} . $match->{'time'} );
 }
 
 sub getInfos {
@@ -157,6 +171,12 @@ sub matchStart {
     my $rawPrograms = shift or return;
     my $start       = shift or return;
     return first { $_->{'ft'} eq $start } @{$rawPrograms};
+}
+
+sub makeFilenameRawBase {
+    my $self  = shift;
+    my $match = shift or return;
+    return "$match->{station}_$match->{date}_$match->{time}";
 }
 
 sub toPrograms {
