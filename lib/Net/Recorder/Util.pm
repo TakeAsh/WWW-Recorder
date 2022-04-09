@@ -57,7 +57,15 @@ sub loadConfig {
     if ( !( -f $file ) && $fname eq 'config' ) {
         $file = "${dir}/conf/config_default.yml";
     }
-    my $conf = LoadFile($file) or die("${file}: $!");
+    if ( !( -f $file ) ) {
+        warn("Mot Found: ${fname}");
+        return;
+    }
+    my $conf = LoadFile($file);
+    if ( !$conf ) {
+        warn("${file}: $!");
+        return;
+    }
     if ( my $db = $conf->{'DbInfo'} ) {
         map { $db->{'DSN'} =~ s/\{$_\}/$db->{$_}/e; } keys( %{$db} );
     }
