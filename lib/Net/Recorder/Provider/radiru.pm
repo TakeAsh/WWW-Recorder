@@ -77,16 +77,10 @@ sub getProgramsFromUri {
     my $total   = shift or return;
     my $uri     = shift or return;
     my $match   = shift or return;
-    my $service = $self->Services()->ByChannel( $match->{'channel'} )->{'Service'};
-    my $detail  = $self->getProgramDetail(
-        {   area    => $match->{'area'},
-            service => $service,
-            dateid  => join( "", $match->{'y'}, $match->{'m'}, $match->{'d'}, $match->{'id'} ),
-        }
-    );
-    return !$detail
+    my $program = $self->getProgramInfo( $uri, $match );
+    return !$program
         ? undef
-        : [ $self->toProgram($detail) ];
+        : [$program];
 }
 
 sub getProgramDay {
@@ -122,6 +116,27 @@ sub flattenPrograms {
         : [@programs];
 }
 
+sub getProgramInfo {
+    my $self      = shift;
+    my $uri       = shift                                    or return;
+    my $match     = shift                                    or return;
+    my $videoInfo = $self->getProgramInfoRaw( $uri, $match ) or return;
+    return $self->toProgram($videoInfo);
+}
+
+sub getProgramInfoRaw {
+    my $self    = shift;
+    my $uri     = shift or return;
+    my $match   = shift or return;
+    my $service = $self->Services()->ByChannel( $match->{'channel'} )->{'Service'};
+    return $self->getProgramDetail(
+        {   area    => $match->{'area'},
+            service => $service,
+            dateid  => join( "", $match->{'y'}, $match->{'m'}, $match->{'d'}, $match->{'id'} ),
+        }
+    );
+}
+
 sub getProgramDetail {
     my $self  = shift;
     my $param = shift;
@@ -135,6 +150,12 @@ sub getProgramDetail {
     return !$service
         ? $detail->{'list'}
         : $detail->{'list'}{$service}[0];
+}
+
+sub makeFilenameRawBase {
+    my $self  = shift;
+    my $match = shift or return;
+    return "$match->{channel}_$match->{y}$match->{m}$match->{d}_$match->{area}";
 }
 
 sub toProgram {
