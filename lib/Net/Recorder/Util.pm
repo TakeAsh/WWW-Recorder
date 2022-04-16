@@ -29,6 +29,7 @@ our @EXPORT = qw(
     decodeUtf8 encodeUtf8 getCookie setCookie
     trim unifyLf trimTextInBytes startsWith endsWith toJson decodeJson
     connectDB getColumnsArray getColumnsHash getColumnsNames
+    getProgramsByProvider
     integrateErrorMessages
     normalizeTitle normalizeSubtitle replaceSubtitle
     getAvailableDisk
@@ -202,6 +203,25 @@ sub getColumnsNames {
     my $tableName = shift                               or return;
     my $columns   = getColumnsArray( $dbh, $tableName ) or return;
     return [ map { $_->{'COLUMN_NAME'} } @{$columns} ];
+}
+
+sub getProgramsByProvider {
+    my $dbh      = shift or return;
+    my $provider = shift or return;
+    my $sql      = q{
+        SELECT * FROM `Programs` 
+        WHERE `Provider` = :Provider-VARCHAR 
+        ORDER BY `Title` COLLATE utf8mb4_unicode_ci; };
+    my $sth = $dbh->prepare_ex( $sql, { Provider => $provider, } ) or die($DBI::errstr);
+    $sth->execute()                                                or die($DBI::errstr);
+    my @programs = ();
+    while ( my $row = $sth->fetchrow_hashref ) {
+        push( @programs, Net::Recorder::Program->new($row) );
+    }
+    $sth->finish;
+    return !@programs
+        ? undef
+        : [@programs];
 }
 
 sub integrateErrorMessages {
