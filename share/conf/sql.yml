@@ -59,9 +59,9 @@ GetProgramsForDisplay: |
   LEFT JOIN `States` s ON p.`Status` = s.`Status`
   WHERE p.`Provider` = :Provider-VARCHAR
 SortBy:
-  Status:   ORDER BY s.`Order`, p.`Start`, p.`End`, p.`Title`;
-  Title:    ORDER BY p.`Title` COLLATE utf8mb4_unicode_ci, p.`Start`, p.`End`, s.`Order`;
-  Update:   ORDER BY p.`Update` desc, s.`Order`, p.`Start`, p.`End`, p.`Title`;
+  Status:   ORDER BY s.`Order`, p.`Start`, p.`Title`, p.`End`;
+  Title:    ORDER BY p.`Title` COLLATE utf8mb4_unicode_ci, p.`Start`, s.`Order`, p.`End`;
+  Update:   ORDER BY p.`Update` desc, s.`Order`, p.`Start`, p.`Title`, p.`End`;
 GetProgramsForRecord: |
   SELECT p.*
   FROM `Programs` p
