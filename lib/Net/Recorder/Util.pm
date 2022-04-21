@@ -29,7 +29,7 @@ our @EXPORT = qw(
     loadConfig saveConfig
     decodeUtf8 encodeUtf8 getCookie setCookie
     trim unifyLf trimTextInBytes startsWith endsWith toJson decodeJson
-    sortByUnicode
+    sortByUnicode cmpByUnicode
     connectDB getColumnsArray getColumnsHash getColumnsNames
     getProgramsByProvider
     integrateErrorMessages
@@ -173,6 +173,12 @@ sub decodeJson {
 sub sortByUnicode {
     my $array = shift or return;
     return [ $collator->sort( @{$array} ) ];
+}
+
+sub cmpByUnicode {
+    my $a = shift;
+    my $b = shift;
+    return $collator->cmp( $a, $b );
 }
 
 sub connectDB {
