@@ -14,6 +14,7 @@ use Time::Seconds;
 use HTML::Entities;
 use Lingua::JA::Regular::Unicode qw( alnum_z2h space_z2h );
 use Lingua::JA::Numbers;
+use Unicode::Collate;
 use Number::Bytes::Human qw(format_bytes parse_bytes);
 use File::Share ':all';
 use File::HomeDir;
@@ -28,6 +29,7 @@ our @EXPORT = qw(
     loadConfig saveConfig
     decodeUtf8 encodeUtf8 getCookie setCookie
     trim unifyLf trimTextInBytes startsWith endsWith toJson decodeJson
+    sortByUnicode
     connectDB getColumnsArray getColumnsHash getColumnsNames
     getProgramsByProvider
     integrateErrorMessages
@@ -48,6 +50,7 @@ my $regPostOnly
 my $regPreOnly
     = qr{(?<pre>(#|Lesson|page\.|EPISODE\.?|COLLECTION|session|PHASE|巻ノ|ドキドキ\N{U+2661}|その|Stage[：\.]?|エピソード|File\.?|trip|trap：|ページ|act\.|Step|Line\.|ろ~る|説|ブラッド|\sEX|CHAPTER)\s*)(?<num>[^-\s\+~～「」『』【】\(\)]+)}i;
 my $json       = JSON::XS->new->utf8(0)->allow_nonref(1);
+my $collator   = Unicode::Collate->new();
 my $cookieName = encodeUtf8('NetRecorder');
 my $ffmpeg     = can_run('ffmpeg') or die("ffmpeg is not found");
 
@@ -165,6 +168,11 @@ sub toJson {
 sub decodeJson {
     my $text = shift or return;
     return try { $json->decode($text) } catch {undef};
+}
+
+sub sortByUnicode {
+    my $array = shift or return;
+    return [ $collator->sort( @{$array} ) ];
 }
 
 sub connectDB {
