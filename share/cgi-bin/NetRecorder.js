@@ -4,6 +4,7 @@
 
 import { CyclicEnum } from './modules/CyclicEnum.js';
 import { getNodesByXpath } from './modules/Util.js';
+import { ApiResult } from './modules/ApiResult.js';
 
 const d = document;
 const TrStatuses = new CyclicEnum(
@@ -42,6 +43,8 @@ class NetRecorder {
         d.getElementById('Button_Command_' + key)
           .addEventListener('click', command, false);
       });
+    d.getElementById('formNewPrograms')
+      .addEventListener('submit', addPrograms, false);
   }
 }
 
@@ -100,4 +103,15 @@ function sortBy(event) {
 function command(event) {
   d.getElementById('Command').value = this.dataset.command;
   d.getElementById('formQueue').submit();
+}
+
+function addPrograms(event) {
+  event.preventDefault();
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', './addPrograms.cgi');
+  xhr.addEventListener('load', () => {
+    console.log(new ApiResult(xhr.responseText));
+    getNodesByXpath('.//form[@id="formNewPrograms"]/textarea')[0].value = '';
+  }, false);
+  xhr.send(new FormData(d.getElementById('formNewPrograms')));
 }

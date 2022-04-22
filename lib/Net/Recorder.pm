@@ -21,8 +21,10 @@ use version 0.77; our $VERSION = version->declare("v0.0.1");
 
 our @EXPORT = qw(
     getProgramsForDisplay
-    getProgramUris addPrograms
+    getProgramUris
     getPrograms
+    outputApiResult
+    ApiAddPrograms
     record
     retryPrograms
     abortPrograms
@@ -76,26 +78,8 @@ sub getProgramUris {
             ? ( map { "$+{pre}${_}$+{post}"; } ( $+{'start'} .. $+{'end'} ) )
             : $uri
         }
-        map { split( /\n/, $_ ) } @_;
+        map { split( /\n/, unifyLf($_) ) } @_;
     return sort( keys(%uris) );
-}
-
-sub addPrograms {
-    my @programs  = @_;
-    my @providers = Net::Recorder::Provider->providers();
-    my $index     = 0;
-    foreach my $program (@programs) {
-        ++$index;
-        foreach my $provider (@providers) {
-            my $match = $provider->isSupported($program) or next;
-            my $programs
-                = $provider->getProgramsFromUri( $index, scalar(@programs), $program, $match )
-                or next;
-            $provider->store($programs);
-            $provider->flush();
-            last;
-        }
-    }
 }
 
 sub getPrograms {
@@ -135,6 +119,63 @@ sub record {
         }
     }
     while ( wait() >= 0 ) { sleep(1); }
+}
+
+sub outputApiResult {
+    my $q          = shift or return;
+    my $result     = shift or return;
+    my $callback   = shift;
+    my $jsonString = toJson($result);
+    chomp($jsonString);
+    print $q->header(
+        -type                         => $callback ? 'application/javascript' : 'application/json',
+        -charset                      => 'utf-8',
+        -status                       => $result->{'Code'} . ' ' . $result->{'Message'},
+        -expires                      => 'now',
+        -cache_control                => 'no-cache, no-store',
+        -access_control_allow_origin  => '*',
+        -access_control_allow_headers => '*',
+        -access_control_allow_methods => 'GET, HEAD, POST, OPTIONS',
+    );
+    if ($callback) {
+        say "${callback}(${jsonString})";
+    } else {
+        say $jsonString;
+    }
+}
+
+sub ApiAddPrograms {
+    my @programs = map { split( /\n/, unifyLf($_) ) } @_;
+    my $result   = {
+        Code    => 400,
+        Message => 'Bad Request',
+        Request => {
+            Command  => 'AddPrograms',
+            Programs => [@programs],
+        },
+    };
+    if ( !@programs ) { return $result; }
+    my @providers = Net::Recorder::Provider->providers();
+    my $index     = 0;
+    my @log       = ();
+    foreach my $program ( getProgramUris(@programs) ) {
+        ++$index;
+        foreach my $provider (@providers) {
+            my $match = $provider->isSupported($program) or next;
+            my $programs
+                = $provider->getProgramsFromUri( $index, scalar(@programs), $program, $match )
+                or next;
+            $provider->store($programs);
+            push( @log, $provider->flush() );
+            last;
+        }
+    }
+    return {
+        %{$result},
+        Code    => 200,
+        Message => 'OK',
+        Log     => join( "\n", grep {$_} @log ),
+    };
 }
 
 sub retryPrograms {

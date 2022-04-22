@@ -34,14 +34,10 @@ my $showSkeleton = $cookie->{'ShowSkeleton'}
     = defined( $q->param('ShowSkeleton') )
     ? !!$q->param('ShowSkeleton')
     : $cookie->{'ShowSkeleton'} || '';
-my @programUris = getProgramUris( $q->multi_param('ProgramUris') );
-my @programIds  = $q->multi_param('ProgramId');
-
-if ( !!@programUris ) {
-    $query->{'ProgramUris_'} = [@programUris];
-}
+my @programIds = $q->multi_param('ProgramId');
 my @providers = grep { $showSkeleton || $_ ne 'skeleton' } Net::Recorder::Provider->providerNames();
 my $provider  = $q->param('Provider') || $cookie->{'Provider'};
+
 if ( !grep { $_ eq $provider } @providers ) {
     $provider = $providers[0] || '';
 }
@@ -52,9 +48,7 @@ defined( my $pid = fork() ) or die("Fail to fork: $!");
 if ( !$pid ) {    # Child process
     close(STDOUT);
     close(STDIN);
-    if ( $command eq 'Add' && !!@programUris ) {
-        addPrograms(@programUris);
-    } elsif ( $command eq 'Retry' && !!@programIds ) {
+    if ( $command eq 'Retry' && !!@programIds ) {
         retryPrograms( $provider, [@programIds] );
     } elsif ( $command eq 'Abort' && !!@programIds ) {
         abortPrograms( $provider, [@programIds] );

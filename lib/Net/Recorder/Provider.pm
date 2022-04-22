@@ -284,8 +284,10 @@ sub log {
 
 sub flush {
     my $self = shift;
-    if ( fileno(STDOUT) ) { say join( "\n", @{ $self->{LOG} } ); }
+    my $log  = join( "\n", @{ $self->{LOG} } );
     $self->{LOG} = [];
+    if ( !defined(wantarray) && fileno(STDOUT) ) { say $log ; }
+    return $log;
 }
 
 1;
