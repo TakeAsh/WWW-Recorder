@@ -163,14 +163,19 @@ sub toProgram {
     my $d    = shift or return;
     $d->{'start_time'} =~ s/([-+])(\d{2}):(\d{2})$//;    # drop timezone, force localtime
     $d->{'end_time'}   =~ s/([-+])(\d{2}):(\d{2})$//;
-    my $start   = Net::Recorder::TimePiece->strptime( $d->{'start_time'}, '%Y-%m-%dT%H:%M:%S' );
-    my $end     = Net::Recorder::TimePiece->strptime( $d->{'end_time'},   '%Y-%m-%dT%H:%M:%S' );
-    my $desc    = join( "\n", grep {$_} map { $d->{$_} } qw(subtitle content music free rate) );
-    my $channel = $self->Services()->ByService( $d->{'service'}{'id'} )->{'Channel'};
+    my $start       = Net::Recorder::TimePiece->strptime( $d->{'start_time'}, '%Y-%m-%dT%H:%M:%S' );
+    my $end         = Net::Recorder::TimePiece->strptime( $d->{'end_time'},   '%Y-%m-%dT%H:%M:%S' );
+    my $desc        = join( "\n", grep {$_} map { $d->{$_} } qw(subtitle content music free rate) );
+    my $channel     = $self->Services()->ByService( $d->{'service'}{'id'} )->{'Channel'};
+    my $title       = $d->{'title'};
+    my $seriesTitle = $title;
+    $seriesTitle =~ s/\s*▽.+$//;
     return Net::Recorder::Program->new(
         Provider => $self->name(),
         ID       => $d->{'id'},
         Extra    => {
+            SeriesTitle    => $seriesTitle,
+            SeriesUri      => $d->{'url'}{'pc'},
             AreaId         => $d->{'area'}{'id'},
             AreaName       => $d->{'area'}{'name'},
             ServiceId      => $d->{'service'}{'id'},
@@ -185,7 +190,7 @@ sub toProgram {
         Start       => $start,
         End         => $end,
         Duration    => ( $end - $start )->seconds,
-        Title       => $d->{'title'},
+        Title       => $title,
         Description => $desc,
         Info        => $d->{'info'},
         Performer   => $d->{'act'},
@@ -440,18 +445,54 @@ use feature qw( say );
 use Encode;
 use YAML::Syck qw( LoadFile DumpFile Dump );
 use FindBin::libs;
+use Net::Recorder::Util;
 use parent 'Net::Recorder::Program::Extra';
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;
 
-__PACKAGE__->keysShort( 'AreaName' => 'Area', 'ServiceChannel' => 'Channel', );
+__PACKAGE__->keysShort(
+    'SeriesLink'     => 'Series',
+    'AreaName'       => 'Area',
+    'ServiceChannel' => 'Channel',
+);
 
 sub new {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
     bless( $self, $class );
+    if ( $self->{SeriesTitle} ) { $self->SeriesTitle( $self->{SeriesTitle} ); }
+    if ( $self->{SeriesUri} )   { $self->SeriesUri( $self->{SeriesUri} ); }
     return $self;
+}
+
+sub SeriesTitle {
+    my $self = shift;
+    if (@_) {
+        $self->{SeriesTitle} = normalizeSubtitle(shift);
+        $self->SeriesLink(1);
+    }
+    return $self->{SeriesTitle};
+}
+
+sub SeriesUri {
+    my $self = shift;
+    if (@_) {
+        $self->{SeriesUri} = shift;
+        $self->SeriesLink(1);
+    }
+    return $self->{SeriesUri};
+}
+
+sub SeriesLink {
+    my $self = shift;
+    if ( @_ && $self->{SeriesTitle} && $self->{SeriesUri} ) {
+        $self->{SeriesLink}
+            = sprintf(
+            "<a href=\"%s\" target=\"_blank\" onclick=\"event.stopPropagation();\">%s</a>",
+            $self->{SeriesUri}, $self->{SeriesTitle} );
+    }
+    return $self->{SeriesLink};
 }
 
 sub AreaId {
