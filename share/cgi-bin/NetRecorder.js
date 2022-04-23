@@ -24,8 +24,28 @@ class NetRecorder {
     getNodesByXpath('//input[@type="checkbox" and @name="ProgramId"]')
       .forEach(checkbox => checkbox.addEventListener('change', showSelection, false));
 
-    getNodesByXpath('//tr[contains(@class, "tr_hover")]')
-      .forEach(tr => tr.addEventListener('click', nextTrStatus, false));
+    const trs = getNodesByXpath('//tr[contains(@class, "tr_hover")]');
+    trs.forEach(tr => {
+      tr.addEventListener('click', nextTrStatus, false);
+      const series = tr.dataset.series;
+      if (series) {
+        getNodesByXpath('./td[a[@data-link-type="Series"]]', tr)[0].addEventListener(
+          'dblclick',
+          (event) => {
+            event.preventDefault();
+            const status = TrStatuses.get(tr.dataset.trStatus).next().next();
+            trs.filter(tr1 => tr1.dataset.series == series)
+              .forEach(tr1 => setTrStatus(tr1, status));
+          },
+          false
+        );
+      }
+    });
+
+    getNodesByXpath('.//a[@data-link-type="Episode" or @data-link-type="Series"]').forEach(a => {
+      a.target = '_blank';
+      a.addEventListener('click', (event) => event.stopPropagation(), false);
+    });
   }
 
   static prepareMenu() {
@@ -61,19 +81,23 @@ function showSelection(event) {
 }
 
 function nextTrStatus(event) {
-  const checkbox = this.getElementsByTagName('input')[0];
-  switch (this.dataset.trStatus = TrStatuses.get(this.dataset.trStatus).next()) {
+  setTrStatus(this, TrStatuses.get(this.dataset.trStatus).next());
+}
+
+function setTrStatus(tr, status) {
+  const checkbox = tr.getElementsByTagName('input')[0];
+  switch (tr.dataset.trStatus = status) {
     case TrStatuses.UNCHECKED_HIDE_DETAIL:
       checkbox.checked = false;
-      this.classList.remove('tr_show_detail');
+      tr.classList.remove('tr_show_detail');
       break;
     case TrStatuses.CHECKED_HIDE_DETAIL:
       checkbox.checked = true;
-      this.classList.remove('tr_show_detail');
+      tr.classList.remove('tr_show_detail');
       break;
     case TrStatuses.CHECKED_SHOW_DETAIL:
       checkbox.checked = true;
-      this.classList.add('tr_show_detail');
+      tr.classList.add('tr_show_detail');
       break;
   }
   checkbox.dispatchEvent(new CustomEvent('change'));

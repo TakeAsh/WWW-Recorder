@@ -194,7 +194,7 @@ sub toProgram {
         Description => $desc,
         Info        => $d->{'info'},
         Performer   => $d->{'act'},
-        Uri         => $d->{'url'}{'episode'},
+        Uri         => $d->{'url'}{'episode'} || $d->{'url'}{'pc'},
     );
 }
 
@@ -487,9 +487,7 @@ sub SeriesUri {
 sub SeriesLink {
     my $self = shift;
     if ( @_ && $self->{SeriesTitle} && $self->{SeriesUri} ) {
-        $self->{SeriesLink}
-            = sprintf(
-            "<a href=\"%s\" target=\"_blank\" onclick=\"event.stopPropagation();\">%s</a>",
+        $self->{SeriesLink} = sprintf( "<a href=\"%s\" data-link-type=\"Series\">%s</a>",
             $self->{SeriesUri}, $self->{SeriesTitle} );
     }
     return $self->{SeriesLink};

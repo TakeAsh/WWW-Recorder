@@ -54,13 +54,17 @@ sub getProgramsForDisplay {
         my $p    = Net::Recorder::Program->new($row);
         my $desc = join( "",
             map { '<div>' . ( $row->{$_} || '' ) . '</div>' } qw(Performer Description Info) );
-        my $p2 = {
+        my $extra = $p->Extra();
+        my $p2    = {
             index  => ++$index,
             Class  => join( "_", 'STAT', $row->{'Status'}, $index % 2 ),
             Desc   => $desc,
-            Extra2 => [ map { $p->Extra()->{$_} // ''; } @{$extraKeys} ],
+            Extra2 => [ map { $extra->{$_} // ''; } @{$extraKeys} ],
             %{$p},
         };
+        if ( $extra->can('SeriesUri') ) {
+            $p2->{'Series'} = $extra->SeriesUri();
+        }
         push( @programs, $p2 );
     }
     $sth->finish;
