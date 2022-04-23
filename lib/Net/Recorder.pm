@@ -62,9 +62,10 @@ sub getProgramsForDisplay {
             Extra2 => [ map { $extra->{$_} // ''; } @{$extraKeys} ],
             %{$p},
         };
-        if ( $extra->can('SeriesUri') ) {
-            $p2->{'Series'} = $extra->SeriesUri();
-        }
+        $p2->{'Series'}
+            = $extra->can('SeriesUri') ? $extra->SeriesUri()
+            : $extra->can('seriesUri') ? $extra->seriesUri()
+            :                            undef;
         push( @programs, $p2 );
     }
     $sth->finish;
@@ -159,26 +160,30 @@ sub ApiAddPrograms {
         },
     };
     if ( !@programs ) { return $result; }
-    my @providers = Net::Recorder::Provider->providers();
-    my $index     = 0;
-    my @log       = ();
-    foreach my $program ( getProgramUris(@programs) ) {
-        ++$index;
-        foreach my $provider (@providers) {
-            my $match = $provider->isSupported($program) or next;
-            my $programs
-                = $provider->getProgramsFromUri( $index, scalar(@programs), $program, $match )
-                or next;
-            $provider->store($programs);
-            push( @log, $provider->flush() );
-            last;
+    defined( my $pid = fork() ) or die("Fail to fork: $!");
+    if ( !$pid ) {    # Child process
+        close(STDOUT);
+        close(STDIN);
+        my @providers = Net::Recorder::Provider->providers();
+        my $index     = 0;
+        foreach my $program ( getProgramUris(@programs) ) {
+            ++$index;
+            foreach my $provider (@providers) {
+                my $match = $provider->isSupported($program) or next;
+                my $programs
+                    = $provider->getProgramsFromUri( $index, scalar(@programs), $program, $match )
+                    or next;
+                $provider->store($programs);
+                $provider->flush();
+                last;
+            }
         }
+        exit;
     }
     return {
         %{$result},
         Code    => 200,
         Message => 'OK',
-        Log     => join( "\n", grep {$_} @log ),
     };
 }
 
