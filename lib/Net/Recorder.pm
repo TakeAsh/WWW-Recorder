@@ -65,6 +65,7 @@ sub getProgramsForDisplay {
         $p2->{'Series'}
             = $extra->can('SeriesUri') ? $extra->SeriesUri()
             : $extra->can('seriesUri') ? $extra->seriesUri()
+            : $extra->can('SeriesID')  ? $extra->SeriesID()
             :                            undef;
         push( @programs, $p2 );
     }
