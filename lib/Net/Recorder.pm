@@ -24,7 +24,7 @@ our @EXPORT = qw(
     getProgramUris
     getPrograms
     outputApiResult
-    ApiAddPrograms
+    ApiAddPrograms ApiCommand
     record
     retryPrograms
     abortPrograms
@@ -178,6 +178,42 @@ sub ApiAddPrograms {
                 $provider->flush();
                 last;
             }
+        }
+        exit;
+    }
+    return {
+        %{$result},
+        Code    => 200,
+        Message => 'OK',
+    };
+}
+
+sub ApiCommand {
+    my $command    = shift || '';
+    my $provider   = shift || '';
+    my $programIds = shift || {};
+    my $result     = {
+        Code    => 400,
+        Message => 'Bad Request',
+        Request => {
+            Command    => $command,
+            Provider   => $provider,
+            ProgramIds => $programIds,
+        },
+    };
+    if ( ( !grep { $_ eq $command } qw(Retry Abort Remove) ) || !@{$programIds} ) {
+        return $result;
+    }
+    defined( my $pid = fork() ) or die("Fail to fork: $!");
+    if ( !$pid ) {    # Child process
+        close(STDOUT);
+        close(STDIN);
+        if ( $command eq 'Retry' ) {
+            retryPrograms( $provider, $programIds );
+        } elsif ( $command eq 'Abort' ) {
+            abortPrograms( $provider, $programIds );
+        } elsif ( $command eq 'Remove' ) {
+            removePrograms( $provider, $programIds );
         }
         exit;
     }

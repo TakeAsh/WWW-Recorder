@@ -61,7 +61,7 @@ class NetRecorder {
     ['Retry', 'Abort', 'Remove']
       .forEach(key => {
         d.getElementById('Button_Command_' + key)
-          .addEventListener('click', command, false);
+          .addEventListener('click', this.#command, false);
       });
     this.#prepareManuAdd();
   }
@@ -90,6 +90,17 @@ class NetRecorder {
       });
     return false;
   };
+
+  static #command = (event) => {
+    d.getElementById('Command').value = event.target.dataset.command;
+    fetch('./command.cgi', {
+      method: 'POST',
+      body: new FormData(d.getElementById('formQueue')),
+    }).then(response => response.json())
+      .then(result => {
+        console.log(new ApiResult(result));
+      });
+  }
 }
 
 NetRecorder.run();
@@ -145,10 +156,5 @@ function changeMenu() {
 
 function sortBy(event) {
   d.getElementById('SortBy').value = this.dataset.by;
-  d.getElementById('formQueue').submit();
-}
-
-function command(event) {
-  d.getElementById('Command').value = this.dataset.command;
   d.getElementById('formQueue').submit();
 }

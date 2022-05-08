@@ -48,13 +48,6 @@ defined( my $pid = fork() ) or die("Fail to fork: $!");
 if ( !$pid ) {    # Child process
     close(STDOUT);
     close(STDIN);
-    if ( $command eq 'Retry' && !!@programIds ) {
-        retryPrograms( $provider, [@programIds] );
-    } elsif ( $command eq 'Abort' && !!@programIds ) {
-        abortPrograms( $provider, [@programIds] );
-    } elsif ( $command eq 'Remove' && !!@programIds ) {
-        removePrograms( $provider, [@programIds] );
-    }
     exit;
 }
 my $out = $q->header(
