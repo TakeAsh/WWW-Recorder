@@ -63,9 +63,33 @@ class NetRecorder {
         d.getElementById('Button_Command_' + key)
           .addEventListener('click', command, false);
       });
-    d.getElementById('formNewPrograms')
-      .addEventListener('submit', addPrograms, false);
+    this.#prepareManuAdd();
   }
+
+  static #prepareManuAdd() {
+    d.getElementById('formNewPrograms')
+      .addEventListener('submit', this.#addPrograms, false);
+    d.getElementById('addPrograms_ProgramUris')
+      .addEventListener('keyup', (event) => {
+        if (event.key != 'Enter' || !event.ctrlKey) { return; }
+        d.getElementById('addPrograms_Submit').click();
+      }, false);
+  }
+
+  static #addPrograms = (event) => {
+    event.preventDefault();
+    fetch('./addPrograms.cgi', {
+      method: 'POST',
+      body: new FormData(d.getElementById('formNewPrograms')),
+    }).then(response => response.json())
+      .then(result => {
+        console.log(new ApiResult(result));
+        const textarea = getNodesByXpath('.//form[@id="formNewPrograms"]/textarea')[0];
+        textarea.value = '';
+        textarea.focus();
+      });
+    return false;
+  };
 }
 
 NetRecorder.run();
@@ -127,15 +151,4 @@ function sortBy(event) {
 function command(event) {
   d.getElementById('Command').value = this.dataset.command;
   d.getElementById('formQueue').submit();
-}
-
-function addPrograms(event) {
-  event.preventDefault();
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', './addPrograms.cgi');
-  xhr.addEventListener('load', () => {
-    console.log(new ApiResult(xhr.responseText));
-    getNodesByXpath('.//form[@id="formNewPrograms"]/textarea')[0].value = '';
-  }, false);
-  xhr.send(new FormData(d.getElementById('formNewPrograms')));
 }
