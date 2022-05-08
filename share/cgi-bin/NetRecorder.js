@@ -22,11 +22,11 @@ class NetRecorder {
 
   static prepareProgram() {
     getNodesByXpath('//input[@type="checkbox" and @name="ProgramId"]')
-      .forEach(checkbox => checkbox.addEventListener('change', showSelection, false));
+      .forEach(checkbox => checkbox.addEventListener('change', this.#showSelection, false));
 
     const trs = getNodesByXpath('//tr[contains(@class, "tr_hover")]');
     trs.forEach(tr => {
-      tr.addEventListener('click', nextTrStatus, false);
+      tr.addEventListener('click', this.#nextTrStatus, false);
       const series = tr.dataset.series;
       if (series) {
         getNodesByXpath('./td[a[@data-link-type="Series"]]', tr)[0].addEventListener(
@@ -35,32 +35,33 @@ class NetRecorder {
             event.preventDefault();
             const status = TrStatuses.get(tr.dataset.trStatus).next().next();
             trs.filter(tr1 => tr1.dataset.series == series)
-              .forEach(tr1 => setTrStatus(tr1, status));
+              .forEach(tr1 => this.#setTrStatus(tr1, status));
           },
           false
         );
       }
     });
 
-    getNodesByXpath('.//a[@data-link-type="Episode" or @data-link-type="Series"]').forEach(a => {
-      a.target = '_blank';
-      a.addEventListener('click', (event) => event.stopPropagation(), false);
-    });
+    getNodesByXpath('.//a[@data-link-type="Episode" or @data-link-type="Series"]')
+      .forEach(a => {
+        a.target = '_blank';
+        a.addEventListener('click', (event) => event.stopPropagation(), false);
+      });
   }
 
   static prepareMenu() {
     d.getElementById('selectMenu')
-      .addEventListener('change', changeMenu, false);
+      .addEventListener('change', this.#changeMenu, false);
 
     ['ByStatus', 'ByTitle', 'ByUpdate']
       .forEach(key => {
-        d.getElementById('Button_Sort_' + key)
-          .addEventListener('click', sortBy, false);
+        d.getElementById(`Button_Sort_${key}`)
+          .addEventListener('click', this.#sortBy, false);
       });
 
     ['Retry', 'Abort', 'Remove']
       .forEach(key => {
-        d.getElementById('Button_Command_' + key)
+        d.getElementById(`Button_Command_${key}`)
           .addEventListener('click', this.#command, false);
       });
     this.#prepareManuAdd();
@@ -76,6 +77,58 @@ class NetRecorder {
       }, false);
   }
 
+  static #changeMenu = (event) => {
+    const elmSelectMenu = event.target;
+    const selectedMenu = elmSelectMenu.options[elmSelectMenu.selectedIndex].value;
+    Array.from(elmSelectMenu.options)
+      .map(option => option.value)
+      .forEach(menu => {
+        const elmMenu = d.getElementById(`Menu_${menu}`);
+        if (!elmMenu) { return; }
+        if (menu == selectedMenu) {
+          elmMenu.classList.add('ShowMenu');
+        } else {
+          elmMenu.classList.remove('ShowMenu');
+        }
+      });
+  }
+
+  static #showSelection = (event) => {
+    const checkbox = event.target;
+    const tr = checkbox.parentNode.parentNode;
+    if (checkbox.checked) {
+      tr.classList.add('tr_checked');
+    } else {
+      tr.classList.remove('tr_checked');
+      tr.classList.remove('tr_show_detail');
+      tr.dataset.trStatus = TrStatuses.UNCHECKED_HIDE_DETAIL;
+    }
+  };
+
+  static #nextTrStatus = (event) => {
+    const tr = event.currentTarget;
+    this.#setTrStatus(tr, TrStatuses.get(tr.dataset.trStatus).next());
+  };
+
+  static #setTrStatus = (tr, status) => {
+    const checkbox = tr.getElementsByTagName('input')[0];
+    switch (tr.dataset.trStatus = status) {
+      case TrStatuses.UNCHECKED_HIDE_DETAIL:
+        checkbox.checked = false;
+        tr.classList.remove('tr_show_detail');
+        break;
+      case TrStatuses.CHECKED_HIDE_DETAIL:
+        checkbox.checked = true;
+        tr.classList.remove('tr_show_detail');
+        break;
+      case TrStatuses.CHECKED_SHOW_DETAIL:
+        checkbox.checked = true;
+        tr.classList.add('tr_show_detail');
+        break;
+    }
+    checkbox.dispatchEvent(new CustomEvent('change'));
+  }
+
   static #addPrograms = (event) => {
     event.preventDefault();
     fetch('./addPrograms.cgi', {
@@ -88,7 +141,11 @@ class NetRecorder {
         textarea.value = '';
         textarea.focus();
       });
-    return false;
+  };
+
+  static #sortBy = (event) => {
+    d.getElementById('SortBy').value = event.target.dataset.by;
+    d.getElementById('formQueue').submit();
   };
 
   static #command = (event) => {
@@ -100,61 +157,7 @@ class NetRecorder {
       .then(result => {
         console.log(new ApiResult(result));
       });
-  }
+  };
 }
 
 NetRecorder.run();
-
-function showSelection(event) {
-  if (this.checked) {
-    this.parentNode.parentNode.classList.add('tr_checked');
-  } else {
-    this.parentNode.parentNode.classList.remove('tr_checked');
-    this.parentNode.parentNode.classList.remove('tr_show_detail');
-    this.parentNode.parentNode.dataset.trStatus = TrStatuses.UNCHECKED_HIDE_DETAIL;
-  }
-}
-
-function nextTrStatus(event) {
-  setTrStatus(this, TrStatuses.get(this.dataset.trStatus).next());
-}
-
-function setTrStatus(tr, status) {
-  const checkbox = tr.getElementsByTagName('input')[0];
-  switch (tr.dataset.trStatus = status) {
-    case TrStatuses.UNCHECKED_HIDE_DETAIL:
-      checkbox.checked = false;
-      tr.classList.remove('tr_show_detail');
-      break;
-    case TrStatuses.CHECKED_HIDE_DETAIL:
-      checkbox.checked = true;
-      tr.classList.remove('tr_show_detail');
-      break;
-    case TrStatuses.CHECKED_SHOW_DETAIL:
-      checkbox.checked = true;
-      tr.classList.add('tr_show_detail');
-      break;
-  }
-  checkbox.dispatchEvent(new CustomEvent('change'));
-}
-
-function changeMenu() {
-  const elmSelectMenu = d.getElementById('selectMenu');
-  const selectedMenu = elmSelectMenu.options[elmSelectMenu.selectedIndex].value;
-  Array.from(elmSelectMenu.options)
-    .map(option => option.value)
-    .forEach(menu => {
-      const elmMenu = d.getElementById('Menu_' + menu);
-      if (!elmMenu) { return; }
-      if (menu == selectedMenu) {
-        elmMenu.classList.add('ShowMenu');
-      } else {
-        elmMenu.classList.remove('ShowMenu');
-      }
-    });
-}
-
-function sortBy(event) {
-  d.getElementById('SortBy').value = this.dataset.by;
-  d.getElementById('formQueue').submit();
-}
