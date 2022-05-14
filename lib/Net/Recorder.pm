@@ -92,8 +92,12 @@ sub getProgramUris {
 sub getPrograms {
     my $providerName = shift || '';
     my @providers    = Net::Recorder::Provider->providers();
-    if ( my $provider = first { $_->name() eq $providerName } @providers ) {
-        $provider->getProgramsAndStore();
+    if ($providerName) {
+        if ( my $provider = first { $_->name() eq $providerName } @providers ) {
+            $provider->getProgramsAndStore();
+        } else {
+            die("Unknown provider: $providerName\n");
+        }
         return;
     }
     foreach my $provider (@providers) {
