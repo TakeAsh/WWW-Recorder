@@ -95,12 +95,7 @@ sub getPrograms {
         if ( !defined($pid) ) {
             warn("Failed to fork");
         } elsif ( !$pid ) {    # Child process
-            $provider->log( "# " . $provider->name() . ": Start" );
-            if ( my $programs = $provider->getPrograms() ) {
-                $provider->store($programs);
-            }
-            $provider->log( "# " . $provider->name() . ": End" );
-            $provider->flush();
+            $provider->getProgramsAndStore();
             exit;
         }
     }

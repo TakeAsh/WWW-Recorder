@@ -165,6 +165,16 @@ sub call {
     return $self->{AGENT}->request( $self->{REQUEST} );
 }
 
+sub getProgramsAndStore {
+    my $self = shift;
+    $self->log( "# " . $self->name() . ": Start" );
+    if ( my $programs = $self->getPrograms() ) {
+        $self->store($programs);
+    }
+    $self->log( "# " . $self->name() . ": End" );
+    $self->flush();
+}
+
 sub getPrograms {
     my $self = shift;
     return undef;
