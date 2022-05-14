@@ -11,6 +11,7 @@ use YAML::Syck qw( LoadFile DumpFile Dump );
 use Time::Piece;
 use File::Basename;
 use File::Spec;
+use List::Util qw(first);
 use DBIx::NamedParams;
 use FindBin::libs "Bin=${FindBin::RealBin}";
 use Net::Recorder::Util;
@@ -89,7 +90,12 @@ sub getProgramUris {
 }
 
 sub getPrograms {
-    my @providers = Net::Recorder::Provider->providers();
+    my $providerName = shift || '';
+    my @providers    = Net::Recorder::Provider->providers();
+    if ( my $provider = first { $_->name() eq $providerName } @providers ) {
+        $provider->getProgramsAndStore();
+        return;
+    }
     foreach my $provider (@providers) {
         my $pid = fork;
         if ( !defined($pid) ) {
