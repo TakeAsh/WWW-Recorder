@@ -48,7 +48,7 @@ my $regPrePost
 my $regPostOnly
     = qr{(?<num>[^-\s\+~～「」『』【】\(\)]+?)(?<post>話|ノ怪|限目|時限目|時間目|ノ銃|Fr|発目|組目|bit|品目|本目|杯目|さやめ|着目|幕|合目)};
 my $regPreOnly
-    = qr{(?<pre>(#|Lesson|page\.|EPISODE\.?|COLLECTION|session|PHASE|巻ノ|ドキドキ\N{U+2661}|その|Stage[：\.]?|エピソード|File\.?|trip|trap：|ページ|act\.|Step|Line\.|ろ~る|説|ブラッド|\sEX|CHAPTER)\s*)(?<num>[^-\s\+~～「」『』【】\(\)]+)}i;
+    = qr{(?<pre>(#|Lesson|page\.|EPISODE\.?|COLLECTION|session|PHASE|巻ノ|ドキドキ\N{U+2661}|その|Stage[：\.]?|エピソード|File\.?|trip|trap：|ページ|act\.|Step|Line\.|ろ~る|説|ブラッド|\sEX|CHAPTER\.?)\s*)(?<num>[^-\s\+~～「」『』【】\(\)]+)}i;
 my $json       = JSON::XS->new->utf8(0)->allow_nonref(1);
 my $collator   = Unicode::Collate->new();
 my $cookieName = encodeUtf8('NetRecorder');
