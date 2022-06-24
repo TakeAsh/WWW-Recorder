@@ -36,7 +36,7 @@ my $showSkeleton = $cookie->{'ShowSkeleton'}
     : $cookie->{'ShowSkeleton'} || '';
 my @programIds = $q->multi_param('ProgramId');
 my @providers = grep { $showSkeleton || $_ ne 'skeleton' } Net::Recorder::Provider->providerNames();
-my $provider  = $q->param('Provider') || $cookie->{'Provider'};
+my $provider  = $q->param('Provider') || $cookie->{'Provider'} || '';
 
 if ( !grep { $_ eq $provider } @providers ) {
     $provider = $providers[0] || '';
