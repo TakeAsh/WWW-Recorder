@@ -8,7 +8,7 @@ use Encode;
 use Exporter 'import';
 use YAML::Syck qw( LoadFile DumpFile Dump );
 use DBIx::NamedParams;
-use FindBin::libs;
+use FindBin::libs "Bin=${FindBin::RealBin}";
 use Net::Recorder::Util;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 

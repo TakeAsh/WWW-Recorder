@@ -17,10 +17,15 @@ use Lingua::JA::Numbers;
 use Unicode::Collate;
 use Number::Bytes::Human qw(format_bytes parse_bytes);
 use File::Share ':all';
+
+# at develop environment
+#use Cwd                   qw( getcwd );
+#use File::Spec::Functions qw( rel2abs catdir );
+#$File::ShareDir::DIST_SHARE{'Net-Recorder'} = rel2abs( catdir( getcwd, 'share' ) );
 use File::HomeDir;
 use Filesys::DfPortable;
 use List::Util qw(first);
-use IPC::Cmd qw(can_run run QUOTE);
+use IPC::Cmd   qw(can_run run QUOTE);
 use DBIx::NamedParams;
 use FindBin::libs "Bin=${FindBin::RealBin}";
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
