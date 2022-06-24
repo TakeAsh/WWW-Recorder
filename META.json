@@ -4,7 +4,7 @@
       "L<TakeAsh68k|https://github.com/TakeAsh/>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Minilla/v3.1.11, CPAN::Meta::Converter version 2.150010",
+   "generated_by" : "Minilla/v3.1.19, CPAN::Meta::Converter version 2.150010",
    "license" : [
       "perl_5"
    ],
@@ -91,7 +91,7 @@
       "homepage" : "https://github.com/TakeAsh/Net-Recorder",
       "repository" : {
          "type" : "git",
-         "url" : "git://github.com/TakeAsh/Net-Recorder.git",
+         "url" : "https://github.com/TakeAsh/Net-Recorder.git",
          "web" : "https://github.com/TakeAsh/Net-Recorder"
       }
    },
@@ -100,6 +100,6 @@
    "x_contributors" : [
       "TakeAsh <take@TakeAsh.net>"
    ],
-   "x_serialization_backend" : "JSON::PP version 4.05",
+   "x_serialization_backend" : "JSON::PP version 4.09",
    "x_static_install" : 1
 }
