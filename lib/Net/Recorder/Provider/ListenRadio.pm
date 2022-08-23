@@ -197,10 +197,11 @@ sub getStream {
         my $pathWork   = "${dest}/.${fname}.m4a";
         my $pathFinish = "${dest}/${fname}.m4a";
         my $cmd        = sprintf(
-            '%s -y -i %s%s%s -t %d -bsf:a aac_adtstoasc -c copy -movflags faststart %s%s%s',
-            $ffmpeg, QUOTE, $channel->{'ChannelHls'},
-            QUOTE,   $duration + 60,
-            QUOTE,   $pathWork, QUOTE
+            '%s -y -i %s -t %d -bsf:a aac_adtstoasc -c copy -movflags faststart %s',
+            $ffmpeg,
+            sysQuote( $channel->{'ChannelHls'} ),
+            $duration + 60,
+            sysQuote($pathWork)
         );
         my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf )
             = run( command => $cmd, verbose => 0, timeout => 120 * 60 );
@@ -302,9 +303,9 @@ use Carp qw(croak);
 use utf8;
 use feature qw( say );
 use Encode;
-use YAML::Syck qw( LoadFile DumpFile Dump );
+use YAML::Syck   qw( LoadFile DumpFile Dump );
 use Scalar::Util qw(reftype);
-use List::Util qw(first);
+use List::Util   qw(first);
 use FindBin::libs "Bin=${FindBin::RealBin}";
 use Net::Recorder::Util;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
