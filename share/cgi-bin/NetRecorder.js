@@ -131,13 +131,19 @@ class NetRecorder {
 
   static #addPrograms = (event) => {
     event.preventDefault();
+    const data = new FormData(d.getElementById('formNewPrograms'));
+    const submit = d.getElementById('addPrograms_Submit');
+    submit.disabled = true;
+    const textarea = getNodesByXpath('.//form[@id="formNewPrograms"]/textarea')[0];
+    textarea.disabled = true;
     fetch('./addPrograms.cgi', {
       method: 'POST',
-      body: new FormData(d.getElementById('formNewPrograms')),
+      body: data,
     }).then(response => response.json())
       .then(result => {
         console.log(new ApiResult(result));
-        const textarea = getNodesByXpath('.//form[@id="formNewPrograms"]/textarea')[0];
+        submit.disabled = false;
+        textarea.disabled = false;
         textarea.value = '';
         textarea.focus();
       });
