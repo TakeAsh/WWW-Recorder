@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use utf8;
-use bytes qw();
+use bytes   qw();
 use feature qw(say);
 use Encode;
 use YAML::Syck qw(LoadFile Dump);
@@ -192,11 +192,12 @@ sub getProgramsFromUri {
 sub store {
     my $self     = shift;
     my $programs = shift or return;
+    my $options  = { Force => 0, @_ };
     my $dbh      = connectDB( $self->{CONF}{'DbInfo'} );
     my $columns  = getColumnsHash( $dbh, 'Programs' );
     my $sth      = $dbh->prepare_ex( $self->{SQL}{'InsertProgram'} ) or die($DBI::errstr);
     foreach my $program ( @{$programs} ) {
-        if ( $self->checkProgram( $dbh, $program ) ) { next; }
+        if ( !$options->{'Force'} && $self->checkProgram( $dbh, $program ) ) { next; }
         foreach my $key ( $program->keys ) {
             my $max = $columns->{$key}{'CHARACTER_MAXIMUM_LENGTH'} || 0;
             if ( $max && ( my $len = length( $program->{$key} ) || 0 ) >= $max ) {
