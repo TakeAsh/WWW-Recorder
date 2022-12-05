@@ -14,4 +14,5 @@ use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 $|                           = 1;
 $YAML::Syck::ImplicitUnicode = 1;
 
-record();
+my $provider = shift || '';
+record($provider);

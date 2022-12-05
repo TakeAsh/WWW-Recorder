@@ -113,7 +113,22 @@ sub getPrograms {
 }
 
 sub record {
-    my @providers = Net::Recorder::Provider->providers();
+    my $providerName = shift || '';
+    my @providers    = Net::Recorder::Provider->providers();
+    if ($providerName) {
+        if ( my $provider = first { $_->name() eq $providerName } @providers ) {
+            if ( my $programs = $provider->getStartingPrograms() ) {
+                $provider->log( "# " . $provider->name() . ": Start" );
+                $provider->setStandBy($programs);
+                $provider->record($programs);
+                $provider->log( "# " . $provider->name() . ": End" );
+                $provider->flush();
+            }
+        } else {
+            die("Unknown provider: $providerName\n");
+        }
+        return;
+    }
     foreach my $provider (@providers) {
         my $pid = fork;
         if ( !defined($pid) ) {
