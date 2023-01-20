@@ -370,3 +370,7 @@ img.emoji {
 .tr_show_detail+.ProgramDesc {
   display: table-row;
 }
+
+.width100 {
+  width: 100%;
+}
