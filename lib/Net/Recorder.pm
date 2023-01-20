@@ -31,6 +31,7 @@ our @EXPORT = qw(
     abortPrograms
     removePrograms
     exportAll
+    getProgramById
 );
 
 $YAML::Syck::ImplicitUnicode = 1;
@@ -334,6 +335,21 @@ sub escapeForTsv {
     my $text = shift // return '';
     $text =~ s/([\\\n\r\t"'])/sprintf("\\x%02X", ord($1))/egmos;
     return $text;
+}
+
+sub getProgramById {
+    my $provider  = shift or return;
+    my $programId = shift or return;
+    my $dbh       = connectDB( $conf->{'DbInfo'} );
+    my $sth
+        = $dbh->prepare_ex( $sql->{'GetProgramById'}, { Provider => $provider, ID => $programId, } )
+        or die($DBI::errstr);
+    my $rv  = $sth->execute() or die($DBI::errstr);
+    my $row = $sth->fetchrow_hashref;
+    my $p   = Net::Recorder::Program->new($row);
+    $sth->finish;
+    $dbh->disconnect;
+    return $p;
 }
 
 1;

@@ -73,6 +73,12 @@ GetProgramsForExport: |
   FROM `Programs` p 
   WHERE p.`Provider` = :Provider-VARCHAR 
   ORDER BY p.`Title` COLLATE utf8mb4_unicode_ci, p.`Start`, p.`End`;
+GetProgramById: |
+  SELECT *, 
+    DATE_FORMAT(`Start`, '%m/%d %H:%i') AS `StartShort`, 
+    DATE_FORMAT(`End`, '%m/%d %H:%i') AS `EndShort`
+  FROM `Programs`
+  WHERE `Provider` = :Provider-VARCHAR AND `ID` = :ID-VARCHAR
 SetStatus: |
   UPDATE `Programs` 
   SET `Status` = :Status-VARCHAR 
