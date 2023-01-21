@@ -27,6 +27,7 @@ class NetRecorder {
     const trs = getNodesByXpath('//tr[contains(@class, "tr_hover")]');
     trs.forEach(tr => {
       tr.addEventListener('click', this.#nextTrStatus, false);
+      getNodesByXpath("./td[3]", tr)[0].addEventListener('dblclick', this.#editProgram);
       const series = tr.dataset.series;
       if (series) {
         getNodesByXpath('./td[a[@data-link-type="Series"]]', tr)[0].addEventListener(
@@ -128,6 +129,11 @@ class NetRecorder {
     }
     checkbox.dispatchEvent(new CustomEvent('change'));
   }
+
+  static #editProgram = (event) => {
+    const tr = event.currentTarget.parentNode;
+    window.open(`./editProgram.cgi?Provider=${d.querySelector('#Provider').value}&ID=${tr.dataset.id}`, 'editProgram');
+  };
 
   static #addPrograms = (event) => {
     event.preventDefault();

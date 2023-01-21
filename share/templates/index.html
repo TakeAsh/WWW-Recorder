@@ -37,7 +37,8 @@
         </thead>
         <tbody>
           [% FOREACH program IN programs %]
-          <tr class="[% program.Class %] tr_hover" [% IF program.Series %]data-series="[% program.Series %]" [% END %]>
+          <tr class="[% program.Class %] tr_hover" data-id="[% program.ID %]" [% IF program.Series
+            %]data-series="[% program.Series %]" [% END %]>
             <td>
               <input type="checkbox" name="ProgramId" value="[% program.ID %]" onclick="event.stopPropagation();">
             </td>

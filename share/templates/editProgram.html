@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>edit Program - Net-Recorder</title>
+  <link rel="stylesheet" type="text/css" media="screen" href="NetRecorder.css" />
+</head>
+
+<body>
+  <h1>edit Program</h1>
+  [% IF info %]
+  <div>
+    <pre>[% info %]</pre>
+  </div>
+  [% END %]
+  <div>
+    <form id="formEditProgram" name="formEditProgram" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="Command" value="Update">
+      <dl>
+        <dt>Provider</dt>
+        <dd><select id="selectProvider" name="Provider">
+            [% FOREACH prov IN providers %]
+            <option [% IF prov==provider %]selected[% END %]>[% prov %]</option>
+            [% END %]
+          </select></dd>
+        <dt>ID (To create new program, erase this)</dt>
+        <dd><input id="inputID" name="ID" class="width100" value="[% program.ID %]"></dd>
+        <dt>Extra</dt>
+        <dd><textarea id="textareaExtra" name="Extra" class="width100" rows="5">[% extra %]</textarea></dd>
+        <dt>Start</dt>
+        <dd><input id="inputStart" name="Start" class="width100" value="[% program.Start %]"></dd>
+        <dt>End</dt>
+        <dd><input id="inputEnd" name="End" class="width100" value="[% program.End %]"></dd>
+        <dt>Title</dt>
+        <dd><textarea id="textareaTitle" name="Title" class="width100" rows="5">[% program.Title %]</textarea></dd>
+        <dt>Description</dt>
+        <dd><textarea id="textareaDescription" name="Description" class="width100"
+            rows="5">[% program.Description %]</textarea>
+        </dd>
+        <dt>Info</dt>
+        <dd><textarea id="textareaInfo" name="Info" class="width100" rows="5">[% program.Info %]</textarea></dd>
+        <dt>Performer</dt>
+        <dd><textarea id="textareaPerformer" name="Performer" class="width100"
+            rows="5">[% program.Performer %]</textarea></dd>
+        <dt>Uri</dt>
+        <dd><input id="inputUri" name="Uri" class="width100" value="[% program.Uri %]"></dd>
+        <dt>Status</dt>
+        <dd><select id="selectStatus" name="Status">
+            [% FOREACH status IN statuses %]
+            <option [% IF status==program.Status %]selected[% END %]>[% status %]</option>
+            [% END %]
+          </select></dd>
+        <dt>Keyword</dt>
+        <dd><input id="inputKeyword" name="Keyword" class="width100" value="[% program.Keyword %]"></dd>
+      </dl>
+      <input type="submit">
+    </form>
+  </div>
+</body>
+
+</html>
