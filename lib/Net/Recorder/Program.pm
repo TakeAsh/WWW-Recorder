@@ -6,7 +6,7 @@ use utf8;
 use feature qw(say);
 use Encode;
 use Const::Fast;
-use YAML::Syck qw(LoadFile Dump);
+use YAML::Syck   qw(LoadFile Dump);
 use Scalar::Util qw( reftype );
 use overload '""' => \&stringify;
 use FindBin::libs;
@@ -91,12 +91,32 @@ sub Start {
     return $self->{Start};
 }
 
+sub StartDate {
+    my $self = shift;
+    return $self->{Start}->ymd;
+}
+
+sub StartTime {
+    my $self = shift;
+    return $self->{Start}->strftime('%H:%M');
+}
+
 sub End {
     my $self = shift;
     if (@_) {
         $self->{End} = Net::Recorder::TimePiece->new(@_);
     }
     return $self->{End};
+}
+
+sub EndDate {
+    my $self = shift;
+    return $self->{End}->ymd;
+}
+
+sub EndTime {
+    my $self = shift;
+    return $self->{End}->strftime('%H:%M');
 }
 
 sub Duration {

@@ -25,6 +25,7 @@ sub new {
         : $t =~ /^\d+:\d+$/                  ? $class->strptime( $t, '%M:%S' )
         : $t =~ /^\d+:\d+:\d+$/              ? $class->strptime( $t, '%H:%M:%S' )
         : $t =~ /^\d+-\d+-\d+$/              ? $class->strptime( $t, '%Y-%m-%d' )
+        : $t =~ /^\d+-\d+-\d+\s\d+:\d+$/     ? $class->strptime( $t, '%Y-%m-%d %H:%M' )
         : $t =~ /^\d+-\d+-\d+\s\d+:\d+:\d+$/ ? $class->strptime( $t, '%Y-%m-%d %H:%M:%S' )
         : $t =~ /^\d+$/                      ? $class->localtime($t)
         :                                      croak("Must be '[yyyy-mm-dd] [HH:]MM:SS': ${t}");

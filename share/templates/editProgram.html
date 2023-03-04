@@ -31,9 +31,15 @@
         <dt>Extra</dt>
         <dd><textarea id="textareaExtra" name="Extra" class="width100" rows="5">[% extra %]</textarea></dd>
         <dt>Start</dt>
-        <dd><input id="inputStart" name="Start" class="width100" value="[% program.Start %]"></dd>
+        <dd>
+          <input id="inputStartDate" name="StartDate" type="date" value="[% program.StartDate %]">
+          <input id="inputStartTime" name="StartTime" type="time" value="[% program.StartTime %]">
+        </dd>
         <dt>End</dt>
-        <dd><input id="inputEnd" name="End" class="width100" value="[% program.End %]"></dd>
+        <dd>
+          <input id="inputEndDate" name="EndDate" type="date" value="[% program.EndDate %]">
+          <input id="inputEndTime" name="EndTime" type="time" value="[% program.EndTime %]">
+        </dd>
         <dt>Title</dt>
         <dd><textarea id="textareaTitle" name="Title" class="width100" rows="5">[% program.Title %]</textarea></dd>
         <dt>Description</dt>
