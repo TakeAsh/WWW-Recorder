@@ -9,8 +9,8 @@ use YAML::Syck qw( LoadFile DumpFile Dump );
 use File::Basename;
 use List::Util qw(first);
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder;
-use Net::Recorder::Util;
+use WWW::Recorder;
+use WWW::Recorder::Util;
 use Term::Encoding qw(term_encoding);
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
@@ -20,7 +20,7 @@ $YAML::Syck::ImplicitUnicode = 1;
 my $exec = basename($0);
 if ( @ARGV < 1 ) { die("usage: ${exec} <yyyy-mm-dd> [<area>]\n"); }
 my $name     = 'radiko';
-my $provider = Net::Recorder::Provider->new($name) or die("Failed to get ${name}");
+my $provider = WWW::Recorder::Provider->new($name) or die("Failed to get ${name}");
 my $date     = shift;
 my $area     = shift || $provider->area();
 my $date2    = $date;

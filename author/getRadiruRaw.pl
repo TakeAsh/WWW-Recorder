@@ -9,8 +9,8 @@ use YAML::Syck qw( LoadFile DumpFile Dump );
 use File::Basename;
 use List::Util qw(first);
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder;
-use Net::Recorder::Util;
+use WWW::Recorder;
+use WWW::Recorder::Util;
 use Term::Encoding qw(term_encoding);
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
@@ -21,7 +21,7 @@ my $exec = basename($0);
 if ( @ARGV < 3 ) { die("usage: ${exec} <area> <channel> <yyyy-mm-dd>\n"); }
 my ( $areaName, $channel, $date ) = @ARGV;
 my $name     = 'radiru';
-my $provider = Net::Recorder::Provider->new($name)            or die("Failed to get ${name}");
+my $provider = WWW::Recorder::Provider->new($name)            or die("Failed to get ${name}");
 my $area = $provider->ConfigWeb()->Areas()->ByName($areaName) or die("Invalid area: ${areaName}");
 my $service = $provider->Services()->ByChannel($channel)      or die("Invalid channel: ${channel}");
 my $prog    = $provider->getProgramDay( $area, $service, $date ) or die("No Program\n");

@@ -1,4 +1,4 @@
-package Net::Recorder::Provider::skeleton;
+package WWW::Recorder::Provider::skeleton;
 use strict;
 use warnings;
 use utf8;
@@ -8,10 +8,10 @@ use YAML::Syck qw(LoadFile DumpFile Dump);
 use Time::Seconds;
 use IPC::Cmd qw(can_run run QUOTE);
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder::Util;
-use Net::Recorder::TimePiece;
-use Net::Recorder::Program;
-use parent 'Net::Recorder::Provider';
+use WWW::Recorder::Util;
+use WWW::Recorder::TimePiece;
+use WWW::Recorder::Program;
+use parent 'WWW::Recorder::Provider';
 
 $YAML::Syck::ImplicitUnicode = 1;
 
@@ -48,7 +48,7 @@ sub getProgramsFromUri {
     my $total    = shift or return;
     my $uri      = shift or return;
     my $match    = shift or return;
-    my $now      = Net::Recorder::TimePiece->new();
+    my $now      = WWW::Recorder::TimePiece->new();
     my $id       = $now->strftime( $conf->{'FormatId'} );
     my @programs = ();
 
@@ -60,7 +60,7 @@ sub getProgramsFromUri {
         my $end   = ( $now + ONE_MINUTE * ( $i * 3 + 11 ) )->strftime( $conf->{'FormatDateTime'} );
         push(
             @programs,
-            Net::Recorder::Program->new(
+            WWW::Recorder::Program->new(
                 {   Provider => $self->name(),
                     ID       => $id2,
                     Extra    => {
@@ -118,7 +118,7 @@ sub getStream {
     my $dbh     = shift or return;
     my $program = shift or return;
     my $dest    = shift or return;
-    my $now     = Net::Recorder::TimePiece->new();
+    my $now     = WWW::Recorder::TimePiece->new();
     my $start   = $program->Start();
     my $end     = $program->End();
     my $sleep   = ( $start - $now )->seconds - 5;
@@ -132,7 +132,7 @@ sub getStream {
     my $success = 0;
 
     while (1) {
-        $start = Net::Recorder::TimePiece->new();
+        $start = WWW::Recorder::TimePiece->new();
         my $duration = ( $end - $start )->seconds;
         if ( $duration < 0 ) { last; }
         my $fnameMain = join( " ", $fnameBase, $start->toPostfix() );
@@ -144,7 +144,7 @@ sub getStream {
     return $success;
 }
 
-package Net::Recorder::Program::Extra::skeleton;
+package WWW::Recorder::Program::Extra::skeleton;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -153,7 +153,7 @@ use feature qw( say );
 use Encode;
 use YAML::Syck qw( LoadFile DumpFile Dump );
 use FindBin::libs;
-use parent 'Net::Recorder::Program::Extra';
+use parent 'WWW::Recorder::Program::Extra';
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;

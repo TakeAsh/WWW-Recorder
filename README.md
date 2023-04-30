@@ -1,14 +1,14 @@
 # NAME
 
-Net::Recorder - NetRadio recorder with scheduler.
+WWW::Recorder - NetRadio recorder with scheduler.
 
 # SYNOPSIS
 
-    use Net::Recorder;
+    use WWW::Recorder;
 
 # DESCRIPTION
 
-Net::Recorder is ...
+WWW::Recorder is ...
 
 # SEE ALSO
 

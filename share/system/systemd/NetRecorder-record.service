@@ -1,10 +1,10 @@
 [Unit]
-Description = NetRecorder record daemon
+Description = WwwRecorder record daemon
 After = network-online.target
 
 [Service]
 Type = oneshot
-ExecStart = /var/www/Net-Recorder/share/service/record.pl
+ExecStart = /var/www/WWW-Recorder/share/service/record.pl
 #User = apache
 #Group = apache
 

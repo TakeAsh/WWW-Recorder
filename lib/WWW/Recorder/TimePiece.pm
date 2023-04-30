@@ -1,4 +1,4 @@
-package Net::Recorder::TimePiece;
+package WWW::Recorder::TimePiece;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -11,7 +11,7 @@ use Scalar::Util qw( reftype );
 use overload '""' => \&stringify;
 use parent 'Time::Piece';
 use FindBin::libs;
-use Net::Recorder::Util;
+use WWW::Recorder::Util;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;

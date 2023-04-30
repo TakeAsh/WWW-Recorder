@@ -1,4 +1,4 @@
-package Net::Recorder::Program;
+package WWW::Recorder::Program;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -10,8 +10,8 @@ use YAML::Syck   qw(LoadFile Dump);
 use Scalar::Util qw( reftype );
 use overload '""' => \&stringify;
 use FindBin::libs;
-use Net::Recorder::Util;
-use Net::Recorder::TimePiece;
+use WWW::Recorder::Util;
+use WWW::Recorder::TimePiece;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;
@@ -51,7 +51,7 @@ sub add {
 sub parse {
     my $self = shift;
     my $text = shift or return;
-    my $args = Net::Recorder::Util::fromString($text);
+    my $args = WWW::Recorder::Util::fromString($text);
     $self->add($args);
 }
 
@@ -74,10 +74,10 @@ sub ID {
 sub Extra {
     my $self = shift;
     if (@_) {
-        my $package = "Net::Recorder::Program::Extra::$self->{Provider}";
+        my $package = "WWW::Recorder::Program::Extra::$self->{Provider}";
         $self->{Extra}
             = !$self->{Provider}
-            ? Net::Recorder::Program::Extra->new(@_)
+            ? WWW::Recorder::Program::Extra->new(@_)
             : $package->new(@_);
     }
     return $self->{Extra};
@@ -86,7 +86,7 @@ sub Extra {
 sub Start {
     my $self = shift;
     if (@_) {
-        $self->{Start} = Net::Recorder::TimePiece->new(@_);
+        $self->{Start} = WWW::Recorder::TimePiece->new(@_);
     }
     return $self->{Start};
 }
@@ -104,7 +104,7 @@ sub StartTime {
 sub End {
     my $self = shift;
     if (@_) {
-        $self->{End} = Net::Recorder::TimePiece->new(@_);
+        $self->{End} = WWW::Recorder::TimePiece->new(@_);
     }
     return $self->{End};
 }
@@ -201,7 +201,7 @@ sub Keyword {
 
 sub stringify {
     my $self = shift;
-    return Net::Recorder::Util::stringify( { %{$self} } );
+    return WWW::Recorder::Util::stringify( { %{$self} } );
 }
 
 sub keys {

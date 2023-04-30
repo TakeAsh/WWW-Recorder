@@ -1,4 +1,4 @@
-package Net::Recorder::Program::Extra;
+package WWW::Recorder::Program::Extra;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -9,7 +9,7 @@ use YAML::Syck qw(LoadFile Dump);
 use Scalar::Util qw( reftype );
 use overload '""' => \&stringify;
 use FindBin::libs;
-use Net::Recorder::Util;
+use WWW::Recorder::Util;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;
@@ -39,9 +39,9 @@ sub keysShort {
     my $both  = shift;
     my $class = ( ref($both) || $both ) or return;
     if (@_) {
-        $keysShort->{$class} = Net::Recorder::Program::Extra::Keys->new(@_);
+        $keysShort->{$class} = WWW::Recorder::Program::Extra::Keys->new(@_);
     }
-    return $keysShort->{$class} || Net::Recorder::Program::Extra::Keys->new();
+    return $keysShort->{$class} || WWW::Recorder::Program::Extra::Keys->new();
 }
 
 sub add {
@@ -53,7 +53,7 @@ sub add {
 sub parse {
     my $self = shift;
     my $text = shift or return;
-    my $args = Net::Recorder::Util::fromString(
+    my $args = WWW::Recorder::Util::fromString(
         $text,
         ITEM_SEPARATOR   => qr/;\s*/,
         KEYVAL_SEPARATOR => qr/=/,
@@ -63,7 +63,7 @@ sub parse {
 
 sub stringify {
     my $self = shift;
-    return Net::Recorder::Util::stringify(
+    return WWW::Recorder::Util::stringify(
         { %{$self} },
         ITEM_SEPARATOR   => $self->{_OPTIONS}{ITEM_SEPARATOR},
         KEYVAL_SEPARATOR => $self->{_OPTIONS}{KEYVAL_SEPARATOR},
@@ -72,7 +72,7 @@ sub stringify {
 
 sub stringifyShort {
     my $self = shift;
-    return Net::Recorder::Util::stringify(
+    return WWW::Recorder::Util::stringify(
         {   map  { $_ => $self->{$_}; }
             grep { exists( $self->{$_} ) } @{ ref($self)->keysShort()->getKeys() }
         },
@@ -86,7 +86,7 @@ sub keys {
     return sort( grep { !startsWith( $_, '_' ) } keys( %{$self} ) );
 }
 
-package Net::Recorder::Program::Extra::Keys;
+package WWW::Recorder::Program::Extra::Keys;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -97,7 +97,7 @@ use YAML::Syck qw(LoadFile Dump);
 use Scalar::Util qw( reftype );
 use overload '""' => \&stringify;
 use FindBin::libs;
-use Net::Recorder::Util;
+use WWW::Recorder::Util;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;

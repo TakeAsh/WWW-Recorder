@@ -8,5 +8,5 @@ systemctl stop *.timer
 systemctl stop *.service
 systemctl disable *.timer
 systemctl disable *.service
-rm ${UNIT_DIR}/NetRecorder-*
+rm ${UNIT_DIR}/WwwRecorder-*
 popd

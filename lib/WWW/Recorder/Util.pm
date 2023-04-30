@@ -1,4 +1,4 @@
-package Net::Recorder::Util;
+package WWW::Recorder::Util;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -21,7 +21,7 @@ use File::Share ':all';
 # at develop environment
 #use Cwd                   qw( getcwd );
 #use File::Spec::Functions qw( rel2abs catdir );
-#$File::ShareDir::DIST_SHARE{'Net-Recorder'} = rel2abs( catdir( getcwd, 'share' ) );
+#$File::ShareDir::DIST_SHARE{'WWW-Recorder'} = rel2abs( catdir( getcwd, 'share' ) );
 use File::HomeDir;
 use Filesys::DfPortable;
 use List::Util qw(first);
@@ -56,12 +56,12 @@ my $regPreOnly
     = qr{(?<pre>(#|Lesson|page\.|EPISODE\.?|COLLECTION|session|PHASE|巻ノ|ドキドキ\N{U+2661}|その|Stage[：\.]?|エピソード|File\.?|trip|trap：|ページ|act\.|Step|Line\.|ろ~る|説|ブラッド|\sEX|CHAPTER\.?)\s*)(?<num>[^-\s\+~～「」『』【】\(\)]+)}i;
 my $json       = JSON::XS->new->utf8(0)->allow_nonref(1);
 my $collator   = Unicode::Collate->new();
-my $cookieName = encodeUtf8('NetRecorder');
+my $cookieName = encodeUtf8('WwwRecorder');
 my $ffmpeg     = can_run('ffmpeg') or die("ffmpeg is not found");
 
 sub loadConfig {
     my $fname = shift || 'config';
-    my $dir   = dist_dir('Net-Recorder');
+    my $dir   = dist_dir('WWW-Recorder');
     my $file  = "${dir}/conf/${fname}.yml";
     if ( !( -f $file ) && $fname eq 'config' ) {
         $file = "${dir}/conf/config_default.yml";
@@ -90,7 +90,7 @@ sub saveConfig {
     if ( $fname eq 'config' ) {
         $conf->{'DbInfo'}{'DSN'} = 'DBI:{Driver}:host={Server};port={Port};database={DB};';
     }
-    my $dir  = dist_dir('Net-Recorder');
+    my $dir  = dist_dir('WWW-Recorder');
     my $file = "${dir}/conf/${fname}.yml";
     DumpFile( $file, $conf );
 }
@@ -235,7 +235,7 @@ sub getProgramsByProvider {
     $sth->execute()                                                or die($DBI::errstr);
     my @programs = ();
     while ( my $row = $sth->fetchrow_hashref ) {
-        push( @programs, Net::Recorder::Program->new($row) );
+        push( @programs, WWW::Recorder::Program->new($row) );
     }
     $sth->finish;
     return !@programs

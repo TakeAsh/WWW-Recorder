@@ -28,7 +28,7 @@ cover_db/
 
 MYMETA.*
 
-/Net-Recorder-*
+/WWW-Recorder-*
 
 log/
 /share/conf/config.yml

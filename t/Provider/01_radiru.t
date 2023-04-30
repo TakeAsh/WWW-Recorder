@@ -6,11 +6,11 @@ use utf8;
 use Test::More;
 use Test::More::UTF8;
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder;
+use WWW::Recorder;
 
 subtest 'Areas' => sub {
     my $areas = new_ok(
-        'Net::Recorder::Provider::radiru::Areas',
+        'WWW::Recorder::Provider::radiru::Areas',
         [   [   {   apikey  => '700',
                     area    => 'sapporo',
                     areakey => '010',
@@ -84,7 +84,7 @@ subtest 'Areas' => sub {
 };
 
 subtest 'Services' => sub {
-    my $services = new_ok( 'Net::Recorder::Provider::radiru::Services', undef, '$services' );
+    my $services = new_ok( 'WWW::Recorder::Provider::radiru::Services', undef, '$services' );
     my @testcases_ByService = (
         { input => 'n1', expected => 'n1', },
         { input => 'n2', expected => 'n2', },
@@ -111,8 +111,8 @@ subtest 'Services' => sub {
 };
 
 subtest 'ConfigWeb' => sub {
-    my $configWeb = new_ok( 'Net::Recorder::Provider::radiru::ConfigWeb', undef, '$configWeb' );
-    isa_ok( $configWeb->Areas(), 'Net::Recorder::Provider::radiru::Areas', 'Areas()' );
+    my $configWeb = new_ok( 'WWW::Recorder::Provider::radiru::ConfigWeb', undef, '$configWeb' );
+    isa_ok( $configWeb->Areas(), 'WWW::Recorder::Provider::radiru::Areas', 'Areas()' );
     like(
         $configWeb->UrlProgramDay(),
         qr{^https?://api.nhk.or.jp/.*/[^\.]+\.json$},
@@ -126,10 +126,10 @@ subtest 'ConfigWeb' => sub {
 };
 
 subtest 'radiru' => sub {
-    my $radiru = new_ok( 'Net::Recorder::Provider::radiru', undef, '$radiru' );
+    my $radiru = new_ok( 'WWW::Recorder::Provider::radiru', undef, '$radiru' );
     can_ok( $radiru, qw(new getPrograms getProgramsFromUri record) );
-    isa_ok( $radiru->ConfigWeb(), 'Net::Recorder::Provider::radiru::ConfigWeb', 'ConfigWeb()' );
-    isa_ok( $radiru->Services(),  'Net::Recorder::Provider::radiru::Services',  'Services()' );
+    isa_ok( $radiru->ConfigWeb(), 'WWW::Recorder::Provider::radiru::ConfigWeb', 'ConfigWeb()' );
+    isa_ok( $radiru->Services(),  'WWW::Recorder::Provider::radiru::Services',  'Services()' );
 };
 
 done_testing();

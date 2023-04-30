@@ -1,4 +1,4 @@
-package Net::Recorder::Provider::radiru;
+package WWW::Recorder::Provider::radiru;
 use strict;
 use warnings;
 use utf8;
@@ -10,10 +10,10 @@ use XML::Simple;
 use IPC::Cmd qw(can_run run QUOTE);
 use List::Util qw(first);
 use FindBin::libs;
-use Net::Recorder::Util;
-use Net::Recorder::TimePiece;
-use Net::Recorder::Program;
-use parent 'Net::Recorder::Provider';
+use WWW::Recorder::Util;
+use WWW::Recorder::TimePiece;
+use WWW::Recorder::Program;
+use parent 'WWW::Recorder::Provider';
 
 $YAML::Syck::ImplicitUnicode   = 1;
 $XML::Simple::PREFERRED_PARSER = 'XML::Parser';
@@ -29,7 +29,7 @@ sub new {
         program_pattern =>
             qr{\b(?<channel>r1|r2|fm)\.(?<id>\d+).(?<y>\d{4})-(?<m>\d{2})-(?<d>\d{2})\.(?<area>\d{3})\b},
     );
-    $self->{SERVICES} = Net::Recorder::Provider::radiru::Services->new();
+    $self->{SERVICES} = WWW::Recorder::Provider::radiru::Services->new();
     bless( $self, $class );
     return $self;
 }
@@ -37,7 +37,7 @@ sub new {
 sub ConfigWeb {
     my $self = shift;
     if ( !$self->{CONFIG_WEB} ) {
-        $self->{CONFIG_WEB} = Net::Recorder::Provider::radiru::ConfigWeb->new();
+        $self->{CONFIG_WEB} = WWW::Recorder::Provider::radiru::ConfigWeb->new();
     }
     return $self->{CONFIG_WEB};
 }
@@ -102,7 +102,7 @@ sub getProgramDay {
 sub flattenPrograms {
     my $self        = shift;
     my $rawPrograms = shift or return;
-    my $now         = Net::Recorder::TimePiece->new();
+    my $now         = WWW::Recorder::TimePiece->new();
     my @programs    = ();
     foreach my $service ( keys( %{ $rawPrograms->{'list'} } ) ) {
         foreach my $detail ( @{ $rawPrograms->{'list'}{$service} } ) {
@@ -163,14 +163,14 @@ sub toProgram {
     my $d    = shift or return;
     $d->{'start_time'} =~ s/([-+])(\d{2}):(\d{2})$//;    # drop timezone, force localtime
     $d->{'end_time'}   =~ s/([-+])(\d{2}):(\d{2})$//;
-    my $start       = Net::Recorder::TimePiece->strptime( $d->{'start_time'}, '%Y-%m-%dT%H:%M:%S' );
-    my $end         = Net::Recorder::TimePiece->strptime( $d->{'end_time'},   '%Y-%m-%dT%H:%M:%S' );
+    my $start       = WWW::Recorder::TimePiece->strptime( $d->{'start_time'}, '%Y-%m-%dT%H:%M:%S' );
+    my $end         = WWW::Recorder::TimePiece->strptime( $d->{'end_time'},   '%Y-%m-%dT%H:%M:%S' );
     my $desc        = join( "\n", grep {$_} map { $d->{$_} } qw(subtitle content music free rate) );
     my $channel     = $self->Services()->ByService( $d->{'service'}{'id'} )->{'Channel'};
     my $title       = $d->{'title'};
     my $seriesTitle = $title;
     $seriesTitle =~ s/\s*▽.+$//;
-    return Net::Recorder::Program->new(
+    return WWW::Recorder::Program->new(
         Provider => $self->name(),
         ID       => $d->{'id'},
         Extra    => {
@@ -236,7 +236,7 @@ sub getStream {
     my $dbh     = shift or return;
     my $program = shift or return;
     my $dest    = shift or return;
-    my $now     = Net::Recorder::TimePiece->new();
+    my $now     = WWW::Recorder::TimePiece->new();
     my $start   = $program->Start();
     my $end     = $program->End();
     my $sleep   = ( $start - $now )->seconds;
@@ -260,7 +260,7 @@ sub getStream {
     my $success   = 0;
 
     while (1) {
-        $start = Net::Recorder::TimePiece->new();
+        $start = WWW::Recorder::TimePiece->new();
         my $duration = ( $end - $start )->seconds;
         if ( $duration < 0 ) { last; }
         if ( $duration >= 2 * 60 * 60 - 5 ) {    # over 2hr
@@ -290,7 +290,7 @@ sub getStream {
     return $success;
 }
 
-package Net::Recorder::Provider::radiru::ConfigWeb;
+package WWW::Recorder::Provider::radiru::ConfigWeb;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -328,7 +328,7 @@ sub new {
         GroupTags      => { 'stream_url' => 'data', },
         NormaliseSpace => 2,
     );
-    $self->{AREAS} = Net::Recorder::Provider::radiru::Areas->new( $self->{'stream_url'} );
+    $self->{AREAS} = WWW::Recorder::Provider::radiru::Areas->new( $self->{'stream_url'} );
     $self->{'url_program_day'} =~ s/\[YYYY-MM-DD\]/{date}/;
     $self->{URL_PROGRAM_DAY}    = 'https:' . $self->{'url_program_day'};
     $self->{URL_PROGRAM_DETAIL} = 'https:' . $self->{'url_program_detail'};
@@ -351,7 +351,7 @@ sub UrlProgramDetail {
     return $self->{URL_PROGRAM_DETAIL};
 }
 
-package Net::Recorder::Provider::radiru::Areas;
+package WWW::Recorder::Provider::radiru::Areas;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -392,7 +392,7 @@ sub getListByApiKey {
     return sort { $a->{'apikey'} <=> $b->{'apikey'} } @{$self};
 }
 
-package Net::Recorder::Provider::radiru::Services;
+package WWW::Recorder::Provider::radiru::Services;
 use strict;
 use warnings;
 use utf8;
@@ -436,7 +436,7 @@ sub getList {
     return @{$self};
 }
 
-package Net::Recorder::Program::Extra::radiru;
+package WWW::Recorder::Program::Extra::radiru;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -445,8 +445,8 @@ use feature qw( say );
 use Encode;
 use YAML::Syck qw( LoadFile DumpFile Dump );
 use FindBin::libs;
-use Net::Recorder::Util;
-use parent 'Net::Recorder::Program::Extra';
+use WWW::Recorder::Util;
+use parent 'WWW::Recorder::Program::Extra';
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;

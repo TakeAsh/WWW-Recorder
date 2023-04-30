@@ -1,2 +1,2 @@
-15 0,12 * * * /var/www/Net-Recorder/share/service/getPrograms.pl
-*/5 * * * * /var/www/Net-Recorder/share/service/record.pl
+15 0,12 * * * /var/www/WWW-Recorder/share/service/getPrograms.pl
+*/5 * * * * /var/www/WWW-Recorder/share/service/record.pl

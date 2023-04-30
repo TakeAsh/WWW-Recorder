@@ -1,4 +1,4 @@
-package Net::Recorder::Provider;
+package WWW::Recorder::Provider;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -16,9 +16,9 @@ use URI::Escape;
 use LWP::UserAgent;
 use DBIx::NamedParams;
 use FindBin::libs;
-use Net::Recorder::Util;
-use Net::Recorder::Keywords;
-use Net::Recorder::Program;
+use WWW::Recorder::Util;
+use WWW::Recorder::Keywords;
+use WWW::Recorder::Program;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;
@@ -42,7 +42,7 @@ sub keysShort {
     my $both  = shift;
     my $class = ( ref($both) || $both ) or return;
     $class =~ /Provider::(?<subclass>[^:]+)$/ or return;
-    return "Net::Recorder::Program::Extra::$+{subclass}"->keysShort();
+    return "WWW::Recorder::Program::Extra::$+{subclass}"->keysShort();
 }
 
 sub new {
@@ -93,7 +93,7 @@ sub program_pattern {
 sub keywords {
     my $self = shift;
     if (@_) {
-        $self->{KEYWORDS} = Net::Recorder::Keywords->new(@_);
+        $self->{KEYWORDS} = WWW::Recorder::Keywords->new(@_);
     }
     return $self->{KEYWORDS};
 }
@@ -241,7 +241,7 @@ sub getStartingPrograms {
     $sth->execute() or die($DBI::errstr);
     my @programs = ();
     while ( my $row = $sth->fetchrow_hashref ) {
-        push( @programs, Net::Recorder::Program->new($row) );
+        push( @programs, WWW::Recorder::Program->new($row) );
     }
     $sth->finish;
     $dbh->disconnect;

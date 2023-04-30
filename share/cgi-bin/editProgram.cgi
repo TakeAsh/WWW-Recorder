@@ -11,8 +11,8 @@ use CGI;
 use File::Share ':all';
 use Data::UUID;
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder;
-use Net::Recorder::Util;
+use WWW::Recorder;
+use WWW::Recorder::Util;
 use Term::Encoding qw(term_encoding);
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
@@ -25,7 +25,7 @@ my $q = new CGI;
 $q->charset(term_encoding);
 my $cookie = getCookie($q);
 my $tt     = Template->new(
-    {   INCLUDE_PATH => dist_dir('Net-Recorder') . '/templates',
+    {   INCLUDE_PATH => dist_dir('WWW-Recorder') . '/templates',
         ENCODING     => 'utf-8',
     }
 ) or die( Template->error() );
@@ -35,7 +35,7 @@ my $showSkeleton = $cookie->{'ShowSkeleton'}
     = defined( $q->param('ShowSkeleton') )
     ? !!$q->param('ShowSkeleton')
     : $cookie->{'ShowSkeleton'} || '';
-my @providers = grep { $showSkeleton || $_ ne 'skeleton' } Net::Recorder::Provider->providerNames();
+my @providers = grep { $showSkeleton || $_ ne 'skeleton' } WWW::Recorder::Provider->providerNames();
 my $command   = $q->param('Command')  || '';
 my $provider  = $q->param('Provider') || '';
 my $id        = $q->param('ID')       || Data::UUID->new->create_str();
@@ -60,7 +60,7 @@ if ( $command eq 'Update' ) {
     );
 }
 my $program = getProgramById( $provider, $id );
-my $extra   = Net::Recorder::Util::stringify(
+my $extra   = WWW::Recorder::Util::stringify(
     $program->Extra(),
     ITEM_SEPARATOR   => "\n",
     KEYVAL_SEPARATOR => "="
@@ -72,7 +72,7 @@ my $out = $q->header(
 );
 $tt->process(
     'editProgram.html',
-    {   title     => "${provider} - Net-Recorder",
+    {   title     => "${provider} - WWW-Recorder",
         provider  => $provider,
         providers => [@providers],
         info      => undef,                          # Dump($query),
@@ -90,7 +90,7 @@ sub update {
     ) = @_;
     $extra = unifyLf($extra);
     $extra =~ s/\n/; /g;
-    my $program = Net::Recorder::Program->new(
+    my $program = WWW::Recorder::Program->new(
         Provider    => $providerName,
         ID          => $id,
         Extra       => $extra,
@@ -103,6 +103,6 @@ sub update {
         Uri         => $uri,
         Keyword     => $keyword,
     );
-    my $provider = Net::Recorder::Provider->new($providerName);
+    my $provider = WWW::Recorder::Provider->new($providerName);
     $provider->store( [$program], Force => 1 );
 }

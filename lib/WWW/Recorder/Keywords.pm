@@ -1,4 +1,4 @@
-package Net::Recorder::Keywords;
+package WWW::Recorder::Keywords;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -8,7 +8,7 @@ use Encode;
 use YAML::Syck qw(LoadFile Dump);
 use Scalar::Util qw( reftype );
 use FindBin::libs;
-use Net::Recorder::Util;
+use WWW::Recorder::Util;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;

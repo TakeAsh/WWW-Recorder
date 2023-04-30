@@ -1,5 +1,5 @@
 ﻿/**
- * @file NetRecorder.js
+ * @file WwwRecorder.js
 */
 
 import { CyclicEnum } from './modules/CyclicEnum.js';
@@ -13,7 +13,7 @@ const TrStatuses = new CyclicEnum(
   'CHECKED_SHOW_DETAIL',
 );
 
-class NetRecorder {
+class WwwRecorder {
 
   static run() {
     this.prepareProgram();
@@ -172,4 +172,4 @@ class NetRecorder {
   };
 }
 
-NetRecorder.run();
+WwwRecorder.run();

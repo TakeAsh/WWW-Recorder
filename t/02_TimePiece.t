@@ -8,10 +8,10 @@ use Test::More::UTF8;
 use Time::Piece;
 use Time::Seconds;
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder::TimePiece;
+use WWW::Recorder::TimePiece;
 
 subtest 'TimePiece/new' => sub {
-    my $tp1 = new_ok( 'Net::Recorder::TimePiece', undef, '$tp1' );
+    my $tp1 = new_ok( 'WWW::Recorder::TimePiece', undef, '$tp1' );
     is( $tp1->stringify(), localtime->strftime('%Y-%m-%d %H:%M:%S'), 'null' );
     my @testcases = (
         {   input    => '00:00',
@@ -41,18 +41,18 @@ subtest 'TimePiece/new' => sub {
         {   input    => '2021/02/03 01:02:03',
             expected => '2021-02-03 01:02:03',
         },
-        {   input    => Net::Recorder::TimePiece->new('2021/02/03 01:02:03'),
+        {   input    => WWW::Recorder::TimePiece->new('2021/02/03 01:02:03'),
             expected => '2021-02-03 01:02:03',
         },
     );
     foreach my $testcase (@testcases) {
-        my $tp2 = new_ok( 'Net::Recorder::TimePiece', [ $testcase->{'input'} ], '$tp2' );
+        my $tp2 = new_ok( 'WWW::Recorder::TimePiece', [ $testcase->{'input'} ], '$tp2' );
         is( $tp2->stringify(), $testcase->{'expected'}, $testcase->{'input'} );
     }
 };
 
 subtest 'TimePiece/toPostfix' => sub {
-    my $tp1 = new_ok( 'Net::Recorder::TimePiece', undef, '$tp1' );
+    my $tp1 = new_ok( 'WWW::Recorder::TimePiece', undef, '$tp1' );
     is( $tp1->toPostfix(), localtime->strftime('%Y-%m-%d %H-%M'), 'null' );
     my @testcases = (
         {   input    => '00:00',
@@ -82,12 +82,12 @@ subtest 'TimePiece/toPostfix' => sub {
         {   input    => '2021/02/03 01:02:03',
             expected => '2021-02-03 01-02',
         },
-        {   input    => Net::Recorder::TimePiece->new('2021/02/03 01:02:03'),
+        {   input    => WWW::Recorder::TimePiece->new('2021/02/03 01:02:03'),
             expected => '2021-02-03 01-02',
         },
     );
     foreach my $testcase (@testcases) {
-        my $tp2 = new_ok( 'Net::Recorder::TimePiece', [ $testcase->{'input'} ], '$tp2' );
+        my $tp2 = new_ok( 'WWW::Recorder::TimePiece', [ $testcase->{'input'} ], '$tp2' );
         is( $tp2->toPostfix(), $testcase->{'expected'}, $testcase->{'input'} );
     }
 };

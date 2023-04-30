@@ -1,4 +1,4 @@
-package Net::Recorder::Provider::radiko;
+package WWW::Recorder::Provider::radiko;
 use strict;
 use warnings;
 use utf8;
@@ -12,10 +12,10 @@ use IPC::Cmd qw(can_run run QUOTE);
 use List::Util qw(first);
 use Digest::SHA2;
 use FindBin::libs;
-use Net::Recorder::Util;
-use Net::Recorder::TimePiece;
-use Net::Recorder::Program;
-use parent 'Net::Recorder::Provider';
+use WWW::Recorder::Util;
+use WWW::Recorder::TimePiece;
+use WWW::Recorder::Program;
+use parent 'WWW::Recorder::Provider';
 
 $YAML::Syck::ImplicitUnicode   = 1;
 $XML::Simple::PREFERRED_PARSER = 'XML::Parser';
@@ -149,7 +149,7 @@ sub getInfos {
 sub flattenPrograms {
     my $self        = shift;
     my $rawPrograms = shift or return;
-    my $now         = Net::Recorder::TimePiece->new();
+    my $now         = WWW::Recorder::TimePiece->new();
     my @programs    = ();
     foreach my $station ( keys( %{ $rawPrograms->{'stations'} } ) ) {
         my $stationName = $rawPrograms->{'stations'}{$station}{'station_name'};
@@ -194,7 +194,7 @@ sub toProgram {
     my $end   = $self->toDateTime( $p->{'to'} );
     my $sha2  = new Digest::SHA2;
     $sha2->add( $p->{'station'}, $start, $end );
-    return Net::Recorder::Program->new(
+    return WWW::Recorder::Program->new(
         Provider => $self->name(),
         ID       => $self->toText( $sha2->b64digest() ),    # $p->{'prog_id'} is not rigid
         Extra    => {
@@ -269,7 +269,7 @@ sub getStream {
     my $dbh     = shift or return;
     my $program = shift or return;
     my $dest    = shift or return;
-    my $now     = Net::Recorder::TimePiece->new();
+    my $now     = WWW::Recorder::TimePiece->new();
     my $start   = $program->Start();
     my $end     = $program->End();
     my $sleep   = ( $start - $now )->seconds;
@@ -293,7 +293,7 @@ sub getStream {
     my $success = 0;
 
     while (1) {
-        $start = Net::Recorder::TimePiece->new();
+        $start = WWW::Recorder::TimePiece->new();
         my $duration = ( $end - $start )->seconds;
         if ( $duration < 0 ) { last; }
         if ( $duration >= 2 * 60 * 60 - 5 ) {    # over 2hr
@@ -391,7 +391,7 @@ sub getStreamUris {
         : $urls->{'url'};
 }
 
-package Net::Recorder::Program::Extra::radiko;
+package WWW::Recorder::Program::Extra::radiko;
 use strict;
 use warnings;
 use Carp qw(croak);
@@ -400,7 +400,7 @@ use feature qw( say );
 use Encode;
 use YAML::Syck qw( LoadFile DumpFile Dump );
 use FindBin::libs;
-use parent 'Net::Recorder::Program::Extra';
+use parent 'WWW::Recorder::Program::Extra';
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;

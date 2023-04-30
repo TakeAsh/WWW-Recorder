@@ -1,10 +1,10 @@
 [Unit]
-Description = NetRecorder getPrograms timer
+Description = WwwRecorder getPrograms timer
 
 [Timer]
 OnCalendar = *-*-* 00,12:15:00
 AccuracySec = 1m
-Unit = NetRecorder-getPrograms.service
+Unit = WwwRecorder-getPrograms.service
 
 [Install]
 WantedBy = timers.target

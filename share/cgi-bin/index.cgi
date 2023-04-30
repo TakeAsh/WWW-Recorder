@@ -10,8 +10,8 @@ use Template;
 use CGI;
 use File::Share ':all';
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder;
-use Net::Recorder::Util;
+use WWW::Recorder;
+use WWW::Recorder::Util;
 use Term::Encoding qw(term_encoding);
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
@@ -22,7 +22,7 @@ my $q = new CGI;
 $q->charset(term_encoding);
 my $cookie = getCookie($q);
 my $tt     = Template->new(
-    {   INCLUDE_PATH => dist_dir('Net-Recorder') . '/templates',
+    {   INCLUDE_PATH => dist_dir('WWW-Recorder') . '/templates',
         ENCODING     => 'utf-8',
     }
 ) or die( Template->error() );
@@ -35,14 +35,14 @@ my $showSkeleton = $cookie->{'ShowSkeleton'}
     ? !!$q->param('ShowSkeleton')
     : $cookie->{'ShowSkeleton'} || '';
 my @programIds = $q->multi_param('ProgramId');
-my @providers = grep { $showSkeleton || $_ ne 'skeleton' } Net::Recorder::Provider->providerNames();
+my @providers = grep { $showSkeleton || $_ ne 'skeleton' } WWW::Recorder::Provider->providerNames();
 my $provider  = $q->param('Provider') || $cookie->{'Provider'} || '';
 
 if ( !grep { $_ eq $provider } @providers ) {
     $provider = $providers[0] || '';
 }
 $cookie->{'Provider'} = $provider;
-my $extraKeys      = "Net::Recorder::Provider::${provider}"->keysShort();
+my $extraKeys      = "WWW::Recorder::Provider::${provider}"->keysShort();
 my $extraKeyLabels = $extraKeys->getLabels();
 defined( my $pid = fork() ) or die("Fail to fork: $!");
 if ( !$pid ) {    # Child process
@@ -57,7 +57,7 @@ my $out = $q->header(
 );
 $tt->process(
     'index.html',
-    {   title     => "${provider} - Net-Recorder",
+    {   title     => "${provider} - WWW-Recorder",
         provider  => $provider,
         providers =>
             [ map { { name => $_, selected => $_ eq $provider ? 'selected' : '', } } @providers ],

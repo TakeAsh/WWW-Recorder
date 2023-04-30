@@ -8,8 +8,8 @@ use Encode;
 use YAML::Syck qw( LoadFile Dump );
 use CGI;
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder;
-use Net::Recorder::Util;
+use WWW::Recorder;
+use WWW::Recorder::Util;
 use Term::Encoding qw(term_encoding);
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 

@@ -3,8 +3,8 @@ DbInfo:
   Server:   localhost
   Port:     3306
   Client:   localhost
-  DB:       NetRecorderDB
-  User:     NetRecorder
+  DB:       WwwRecorderDB
+  User:     WwwRecorder
   Password: ""
   Options:
     mysql_enable_utf8mb4: 1
@@ -14,7 +14,7 @@ DbInfo:
 SaveDirs:
   - /tmp
 
-LogDir: /var/www/Net-Recorder/log
+LogDir: /var/www/WWW-Recorder/log
 
 Keywords:
   -

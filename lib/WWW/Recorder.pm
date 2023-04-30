@@ -1,4 +1,4 @@
-package Net::Recorder;
+package WWW::Recorder;
 use 5.010;
 use strict;
 use warnings;
@@ -14,8 +14,8 @@ use File::Spec;
 use List::Util qw(first);
 use DBIx::NamedParams;
 use FindBin::libs "Bin=${FindBin::RealBin}";
-use Net::Recorder::Util;
-use Net::Recorder::Provider;
+use WWW::Recorder::Util;
+use WWW::Recorder::Provider;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 use version 0.77; our $VERSION = version->declare("v0.0.1");
@@ -53,7 +53,7 @@ sub getProgramsForDisplay {
     my $index    = 0;
 
     while ( my $row = $sth->fetchrow_hashref ) {
-        my $p    = Net::Recorder::Program->new($row);
+        my $p    = WWW::Recorder::Program->new($row);
         my $desc = join( "",
             map { '<div>' . ( $row->{$_} || '' ) . '</div>' } qw(Performer Description Info) );
         my $extra = $p->Extra();
@@ -92,7 +92,7 @@ sub getProgramUris {
 
 sub getPrograms {
     my $providerName = shift || '';
-    my @providers    = Net::Recorder::Provider->providers();
+    my @providers    = WWW::Recorder::Provider->providers();
     if ($providerName) {
         if ( my $provider = first { $_->name() eq $providerName } @providers ) {
             $provider->getProgramsAndStore();
@@ -115,7 +115,7 @@ sub getPrograms {
 
 sub record {
     my $providerName = shift || '';
-    my @providers    = Net::Recorder::Provider->providers();
+    my @providers    = WWW::Recorder::Provider->providers();
     if ($providerName) {
         if ( my $provider = first { $_->name() eq $providerName } @providers ) {
             if ( my $programs = $provider->getStartingPrograms() ) {
@@ -186,7 +186,7 @@ sub ApiAddPrograms {
     if ( !$pid ) {    # Child process
         close(STDOUT);
         close(STDIN);
-        my @providers = Net::Recorder::Provider->providers();
+        my @providers = WWW::Recorder::Provider->providers();
         my $index     = 0;
         foreach my $program ( getProgramUris(@programs) ) {
             ++$index;
@@ -286,11 +286,11 @@ sub removePrograms {
 }
 
 sub exportAll {
-    my @providers = Net::Recorder::Provider->providerNames();
+    my @providers = WWW::Recorder::Provider->providerNames();
     my $dbh       = connectDB( $conf->{'DbInfo'} );
     my $columns   = getColumnsNames( $dbh, 'Programs' );
     my $sth       = $dbh->prepare_ex( $sql->{'GetProgramsForExport'} ) or die($DBI::errstr);
-    my $t         = Net::Recorder::TimePiece->new();
+    my $t         = WWW::Recorder::TimePiece->new();
     my $now       = $t->toPostfix();
     foreach my $provider (@providers) {
         my $programs = getProgramsForExport( $sth, $provider ) or next;
@@ -346,7 +346,7 @@ sub getProgramById {
         or die($DBI::errstr);
     my $rv  = $sth->execute() or die($DBI::errstr);
     my $row = $sth->fetchrow_hashref;
-    my $p   = Net::Recorder::Program->new($row);
+    my $p   = WWW::Recorder::Program->new($row);
     $sth->finish;
     $dbh->disconnect;
     return $p;
@@ -359,15 +359,15 @@ __END__
 
 =head1 NAME
 
-Net::Recorder - NetRadio recorder with scheduler.
+WWW::Recorder - NetRadio recorder with scheduler.
 
 =head1 SYNOPSIS
 
-    use Net::Recorder;
+    use WWW::Recorder;
 
 =head1 DESCRIPTION
 
-Net::Recorder is ...
+WWW::Recorder is ...
 
 =head1 SEE ALSO
 

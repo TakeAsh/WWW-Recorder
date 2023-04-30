@@ -1,10 +1,10 @@
 [Unit]
-Description = NetRecorder getPrograms daemon
+Description = WwwRecorder getPrograms daemon
 After = network-online.target
 
 [Service]
 Type = oneshot
-ExecStart = /var/www/Net-Recorder/share/service/getPrograms.pl
+ExecStart = /var/www/WWW-Recorder/share/service/getPrograms.pl
 #User = apache
 #Group = apache
 
