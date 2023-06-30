@@ -37,6 +37,7 @@ class WwwRecorder {
             const status = TrStatuses.get(tr.dataset.trStatus).next().next();
             trs.filter(tr1 => tr1.dataset.series == series)
               .forEach(tr1 => this.#setTrStatus(tr1, status));
+            this.#showSelectedPrograms();
           },
           false
         );
@@ -109,6 +110,7 @@ class WwwRecorder {
   static #nextTrStatus = (event) => {
     const tr = event.currentTarget;
     this.#setTrStatus(tr, TrStatuses.get(tr.dataset.trStatus).next());
+    this.#showSelectedPrograms();
   };
 
   static #setTrStatus = (tr, status) => {
@@ -129,6 +131,14 @@ class WwwRecorder {
     }
     checkbox.dispatchEvent(new CustomEvent('change'));
   }
+
+  static #showSelectedPrograms = () => {
+    const selectedPrograms = getNodesByXpath('//tr[contains(@class, "tr_checked")]').length;
+    d.title = d.title.replace(/^\(\d+\)/, '');
+    if (selectedPrograms > 0) {
+      d.title = `(${selectedPrograms})${d.title}`;
+    }
+  };
 
   static #editProgram = (event) => {
     const tr = event.currentTarget.parentNode;
