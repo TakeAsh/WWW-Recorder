@@ -16,7 +16,7 @@
   </div>
   [% END %]
   <div id="panelQueue">
-    <form id="formQueue" name="formQueue" method="POST" action="./" enctype="multipart/form-data">
+    <form id="formQueue" name="formQueue" method="GET" action="./" enctype="multipart/form-data">
       <input id="Command" type="hidden" name="Command" value="Show">
       <input id="Provider" type="hidden" name="Provider" value="[% provider %]">
       <input id="SortBy" type="hidden" name="SortBy" value="[% sortBy %]">
@@ -99,7 +99,7 @@
         <button id="Button_Command_Remove" data-command="Remove">Remove</button>
       </div>
       <div id="Menu_Provider" class="MenuArea">
-        <form id="formProvider" name="formProvider" method="POST" action="./" enctype="multipart/form-data">
+        <form id="formProvider" name="formProvider" method="GET" action="./" enctype="multipart/form-data">
           <select id="selectProvider" name="Provider">
             [% FOREACH prov IN providers %]
             <option [% prov.selected %]>[% prov.name %]</option>
