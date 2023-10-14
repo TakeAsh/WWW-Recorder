@@ -7,7 +7,7 @@ use Encode;
 use YAML::Syck qw( LoadFile DumpFile Dump );
 use Time::Seconds;
 use XML::Simple;
-use IPC::Cmd qw(can_run run QUOTE);
+use IPC::Cmd   qw(can_run run);
 use List::Util qw(first);
 use FindBin::libs;
 use WWW::Recorder::Util;
@@ -270,9 +270,9 @@ sub getStream {
         my $pathWork   = "${dest}/.${fname}.m4a";
         my $pathFinish = "${dest}/${fname}.m4a";
         my $cmd        = sprintf(
-            '%s -y -i %s%s%s -t %d -bsf:a aac_adtstoasc -c copy -movflags faststart %s%s%s',
-            $ffmpeg, QUOTE,     $streamUri, QUOTE, $duration + 60,
-            QUOTE,   $pathWork, QUOTE
+            '%s -y -i %s -t %d -bsf:a aac_adtstoasc -c copy -movflags faststart %s',
+            $ffmpeg, sysQuote($streamUri), $duration + 60,
+            sysQuote($pathWork)
         );
         my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf )
             = run( command => $cmd, verbose => 0, timeout => 120 * 60 );
@@ -358,9 +358,9 @@ use Carp qw(croak);
 use utf8;
 use feature qw( say );
 use Encode;
-use YAML::Syck qw( LoadFile DumpFile Dump );
+use YAML::Syck   qw( LoadFile DumpFile Dump );
 use Scalar::Util qw( reftype );
-use List::Util qw(first);
+use List::Util   qw(first);
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;

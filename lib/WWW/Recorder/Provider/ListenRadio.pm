@@ -6,7 +6,7 @@ use feature qw(say);
 use Encode;
 use YAML::Syck qw(LoadFile DumpFile Dump);
 use Time::Seconds;
-use IPC::Cmd qw(can_run run QUOTE);
+use IPC::Cmd qw(can_run run);
 use Digest::SHA2;
 use FindBin::libs "Bin=${FindBin::RealBin}";
 use WWW::Recorder::Util;

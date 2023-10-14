@@ -8,7 +8,7 @@ use YAML::Syck qw( LoadFile DumpFile Dump );
 use Time::Seconds;
 use XML::Simple;
 use MIME::Base64;
-use IPC::Cmd qw(can_run run QUOTE);
+use IPC::Cmd   qw(can_run run);
 use List::Util qw(first);
 use Digest::SHA2;
 use FindBin::libs;
@@ -312,10 +312,12 @@ sub getStream {
             } @{$streamUris}
         ) or next;
         my $cmd = sprintf(
-            '%s -y -headers %sX-Radiko-AuthToken: %s%s -i %s%s%s -t %d -c copy -movflags faststart %s%s%s',
-            $ffmpeg, QUOTE, $authToken, QUOTE, QUOTE, $streamUri->{'playlist_create_url'},
-            QUOTE,   $duration + 60,
-            QUOTE,   $pathWork, QUOTE
+            '%s -y -headers %s -i %s -t %d -c copy -movflags faststart %s',
+            $ffmpeg,
+            sysQuote( 'X-Radiko-AuthToken: ' . $authToken ),
+            sysQuote( $streamUri->{'playlist_create_url'} ),
+            $duration + 60,
+            sysQuote($pathWork)
         );
         my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf )
             = run( command => $cmd, verbose => 0, timeout => 120 * 60 );
