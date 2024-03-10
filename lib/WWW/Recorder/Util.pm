@@ -33,7 +33,7 @@ use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 our @EXPORT = qw(
     loadConfig saveConfig
     decodeUtf8 encodeUtf8 getCookie setCookie
-    trim unifyLf trimTextInBytes startsWith endsWith toJson decodeJson
+    trim unifyLf LfToBr trimTextInBytes startsWith endsWith toJson decodeJson
     sortByUnicode cmpByUnicode
     connectDB getColumnsArray getColumnsHash getColumnsNames
     getProgramsByProvider
@@ -137,6 +137,12 @@ sub unifyLf {
     my $text = shift or return '';
     $text =~ s/\r\n/\n/g;
     $text =~ s/\r/\n/g;
+    return $text;
+}
+
+sub LfToBr {
+    my $text = shift or return '';
+    $text =~ s/\n/<br>/g;
     return $text;
 }
 

@@ -55,7 +55,8 @@ sub getProgramsForDisplay {
     while ( my $row = $sth->fetchrow_hashref ) {
         my $p    = WWW::Recorder::Program->new($row);
         my $desc = join( "",
-            map { '<div>' . ( $row->{$_} || '' ) . '</div>' } qw(Performer Description Info) );
+            map { '<div>' . LfToBr( unifyLf( $row->{$_} || '' ) ) . '</div>' }
+                qw(Performer Description Info) );
         my $extra = $p->Extra();
         my $p2    = {
             index  => ++$index,
