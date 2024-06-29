@@ -86,37 +86,39 @@ sub Extra {
 sub Start {
     my $self = shift;
     if (@_) {
-        $self->{Start} = WWW::Recorder::TimePiece->new(@_);
+        $self->{Start} = WWW::Recorder::TimePiece->new(@_)
+            or croak( "Invalid data: " . join( ", ", @_ ) );
     }
     return $self->{Start};
 }
 
 sub StartDate {
     my $self = shift;
-    return $self->{Start}->ymd;
+    return $self->{Start} ? $self->{Start}->ymd : '';
 }
 
 sub StartTime {
     my $self = shift;
-    return $self->{Start}->strftime('%H:%M');
+    return $self->{Start} ? $self->{Start}->strftime('%H:%M') : '';
 }
 
 sub End {
     my $self = shift;
     if (@_) {
-        $self->{End} = WWW::Recorder::TimePiece->new(@_);
+        $self->{End} = WWW::Recorder::TimePiece->new(@_)
+            or croak( "Invalid data: " . join( ", ", @_ ) );
     }
     return $self->{End};
 }
 
 sub EndDate {
     my $self = shift;
-    return $self->{End}->ymd;
+    return $self->{End} ? $self->{End}->ymd : '';
 }
 
 sub EndTime {
     my $self = shift;
-    return $self->{End}->strftime('%H:%M');
+    return $self->{End} ? $self->{End}->strftime('%H:%M') : '';
 }
 
 sub Duration {
