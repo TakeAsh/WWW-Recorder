@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         Radio ShinyaBin Plus
 // @namespace    https://TakeAsh.net/
-// @version      2024-08-10 21:40
+// @version      2024-08-11 02:00
 // @description  enhance Radio ShinyaBin
 // @author       TakeAsh68k
 // @match        https://www.nhk.jp/p/shinyabin/rs/*
@@ -35,10 +35,11 @@
     },
     '#RSBP_Config': {
       position: 'fixed',
-      top: '4em',
+      top: '0em',
       right: '0em',
       textAlign: 'right',
       backgroundColor: '#d0d0d0',
+      zIndex: 600,
     },
     '#RSBP_Config button, textarea': {
       backgroundColor: 'revert',
