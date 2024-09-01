@@ -1,7 +1,7 @@
 ﻿// ==UserScript==
 // @name         Radio ShinyaBin Plus
 // @namespace    https://TakeAsh.net/
-// @version      2024-08-11 02:00
+// @version      2024-09-02 08:30
 // @description  enhance Radio ShinyaBin
 // @author       TakeAsh68k
 // @match        https://www.nhk.jp/p/shinyabin/rs/*
@@ -30,7 +30,7 @@
     '.keyword': {
       backgroundColor: '#ffc0c0',
     },
-    '.gc-article-text[data-v-34e4a50b] br': {
+    '.gc-article-text br[data-forceDisplay]': {
       display: 'inline',
     },
     '#RSBP_Config': {
@@ -68,7 +68,8 @@
       day.appendChild(node);
       if (node.innerHTML) {
         node.innerHTML = node.innerHTML
-          .replace(/(〔[^〕]+〕)/g, (w, q1) => `<span class="corner_title">${q1}</span>`);
+          .replace(/(〔[^〕]+〕)/g, (w, q1) => `<span class="corner_title">${q1}</span>`)
+          .replace(/<br>/g, (w) => '<br data-forceDisplay>');
         if (regKeywords) {
           node.innerHTML = node.innerHTML
             .replace(regKeywords, (w, q1) => `<span class="keyword">${q1}</span>`);
