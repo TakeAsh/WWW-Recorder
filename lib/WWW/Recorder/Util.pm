@@ -15,6 +15,7 @@ use HTML::Entities;
 use Lingua::JA::Regular::Unicode qw( alnum_z2h space_z2h );
 use Lingua::JA::Numbers;
 use Unicode::Collate;
+use Unicode::Normalize;
 use Number::Bytes::Human qw(format_bytes parse_bytes);
 use File::Share ':all';
 
@@ -271,7 +272,7 @@ sub integrateErrorMessages {
 
 sub normalizeTitle {
     my $title = shift or return;
-    $title = decode_entities( trim( alnum_z2h( space_z2h($title) ) ) );
+    $title = NFC( decode_entities( trim( alnum_z2h( space_z2h($title) ) ) ) );
     $title =~ tr/！＃♯＄％＆（）．/!\##$%&\(\)\./;
     $title =~ tr/:;<>'"?*|\/\\/：；＜＞’”？＊｜／￥/;
     $title =~ s/\s{2,}/ /g;
