@@ -25,8 +25,9 @@ use File::Share ':all';
 #$File::ShareDir::DIST_SHARE{'WWW-Recorder'} = rel2abs( catdir( getcwd, 'share' ) );
 use File::HomeDir;
 use Filesys::DfPortable;
-use List::Util qw(first);
-use IPC::Cmd   qw(can_run run QUOTE);
+use List::Util   qw(first);
+use Scalar::Util qw(reftype);
+use IPC::Cmd     qw(can_run run QUOTE);
 use DBIx::NamedParams;
 use FindBin::libs "Bin=${FindBin::RealBin}";
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
@@ -76,11 +77,13 @@ sub loadConfig {
         warn("${file}: $!");
         return;
     }
-    if ( my $db = $conf->{'DbInfo'} ) {
-        map { $db->{'DSN'} =~ s/\{$_\}/$db->{$_}/e; } keys( %{$db} );
-    }
-    if ( exists( $conf->{'SaveDirs'} ) ) {
-        push( @{ $conf->{'SaveDirs'} }, File::HomeDir->my_home . '/Video' );
+    if ( reftype($conf) eq 'HASH' ) {
+        if ( my $db = $conf->{'DbInfo'} ) {
+            map { $db->{'DSN'} =~ s/\{$_\}/$db->{$_}/e; } keys( %{$db} );
+        }
+        if ( exists( $conf->{'SaveDirs'} ) ) {
+            push( @{ $conf->{'SaveDirs'} }, File::HomeDir->my_home . '/Video' );
+        }
     }
     return $conf;
 }
