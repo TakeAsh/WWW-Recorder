@@ -25,7 +25,7 @@ $YAML::Syck::ImplicitUnicode = 1;
 
 my $package = __PACKAGE__;
 const my @providerNames => sort( grep { !startsWith( $_, '_' ) }
-        map { s/^${package}:://; $_; } usesub($package) );
+    map { s/^${package}:://; $_; } usesub($package) );
 const my $default => { AGENT => 'Mozilla/5.0', };
 
 sub providerNames {
@@ -73,7 +73,7 @@ sub _new {
     $self->{REQUEST} = undef;
     $self->{LOG}     = [];
     bless( $self, $class );
-    $self->keywords( $params->{'keywords'} || $conf->{'Keywords'} );
+    $self->keywords( $params->{'keywords'} );
     return $self;
 }
 
@@ -297,7 +297,7 @@ sub flush {
     my $self = shift;
     my $log  = join( "\n", @{ $self->{LOG} } );
     $self->{LOG} = [];
-    if ( !defined(wantarray) && fileno(STDOUT) ) { say $log ; }
+    if ( !defined(wantarray) && fileno(STDOUT) ) { say $log; }
     return $log;
 }
 

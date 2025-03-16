@@ -6,34 +6,75 @@ use utf8;
 use feature qw(say);
 use Encode;
 use YAML::Syck qw(LoadFile Dump);
-use Scalar::Util qw( reftype );
+use Const::Fast;
+use Scalar::Util qw(reftype);
 use FindBin::libs;
 use WWW::Recorder::Util;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
 $YAML::Syck::ImplicitUnicode = 1;
 
+const my $file => 'Keywords';
+
 sub new {
     my $class    = shift;
-    my $keywords = shift || [];
+    my $keywords = shift;
+    my $self     = {
+        Hash   => {},
+        HitReg => undef,
+    };
+    bless( $self, $class );
+    $self->load();
+    $self->add($keywords);
+    return $self;
+}
+
+sub load {
+    my $self = shift;
+    $self->add( loadConfig($file) );
+}
+
+sub save {
+    my $self = shift;
+    saveConfig( $file, $self->raw() );
+}
+
+sub add {
+    my $self     = shift;
+    my $keywords = shift or return;
     if ( ( reftype($keywords) || '' ) ne 'ARRAY' ) {
         croak("Must be array");
     }
-    my %hash = map {
-        my $item = $_;
-        if ( my $not = $item->{Not} ) {
-            my $patternNot = join( "|", map { quotemeta($_) } split( /\n/, $not ) );
-            $item->{NotReg} = qr/$patternNot/;
-        }
-        $item->{Key} => $item;
-    } @{$keywords};
+    my %hash = (
+        %{ $self->{Hash} },
+        map {
+            my $item = $_;
+            if ( my $not = $item->{Not} ) {
+                my $patternNot = join( "|", map { quotemeta($_) } split( /\n/, $not ) );
+                $item->{NotReg} = qr/$patternNot/;
+            }
+            $item->{Key} => $item;
+        } @{$keywords}
+    );
     my $patternHit = join( "|", map { quotemeta($_) } keys(%hash) );
-    my $self       = {
-        Hash   => {%hash},
-        HitReg => qr/($patternHit)/,
-    };
-    bless( $self, $class );
-    return $self;
+    $self->{Hash}   = {%hash};
+    $self->{HitReg} = qr/($patternHit)/;
+}
+
+sub remove {
+    my $self = shift;
+    my $key  = shift or return;
+    delete $self->{Hash}{$key};
+    my $patternHit = join( "|", map { quotemeta($_) } keys( %{ $self->{Hash} } ) );
+    $self->{HitReg} = qr/($patternHit)/;
+}
+
+sub raw {
+    my $self = shift;
+    my %hash = %{ $self->{Hash} };
+    my @raw
+        = map { { Key => $_, Not => $hash{$_}{Not} || '', } } @{ sortByUnicode( [ keys(%hash) ] ) };
+    return [@raw];
 }
 
 sub match {
