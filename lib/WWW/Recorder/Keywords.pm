@@ -36,9 +36,7 @@ sub load {
 
 sub save {
     my $self = shift;
-    my %hash = %{ $self->{Hash} };
-    my @raw  = map { { Key => $_, Not => $hash{$_}{Not} } } @{ sortByUnicode( [ keys(%hash) ] ) };
-    saveConfig( $file, [@raw] );
+    saveConfig( $file, $self->raw() );
 }
 
 sub add {
@@ -61,6 +59,22 @@ sub add {
     my $patternHit = join( "|", map { quotemeta($_) } keys(%hash) );
     $self->{Hash}   = {%hash};
     $self->{HitReg} = qr/($patternHit)/;
+}
+
+sub remove {
+    my $self = shift;
+    my $key  = shift or return;
+    delete $self->{Hash}{$key};
+    my $patternHit = join( "|", map { quotemeta($_) } keys( %{ $self->{Hash} } ) );
+    $self->{HitReg} = qr/($patternHit)/;
+}
+
+sub raw {
+    my $self = shift;
+    my %hash = %{ $self->{Hash} };
+    my @raw
+        = map { { Key => $_, Not => $hash{$_}{Not} || '', } } @{ sortByUnicode( [ keys(%hash) ] ) };
+    return [@raw];
 }
 
 sub match {

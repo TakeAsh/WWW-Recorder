@@ -6,10 +6,6 @@
     background-color: #d0d0f0;
   }
 
-  .hide {
-    background-color: #d0d0f0;
-  }
-
   a:link {
     color: #0000ee;
   }
@@ -119,10 +115,6 @@
 @media (prefers-color-scheme: dark) {
   body {
     color: #e4e4e4;
-    background-color: #2f2f0f;
-  }
-
-  .hide {
     background-color: #2f2f0f;
   }
 
@@ -357,6 +349,10 @@ img.emoji {
   left: 0;
 }
 
+.hide {
+  display: none;
+}
+
 .ProgramDesc {
   display: none;
 }
@@ -373,4 +369,8 @@ img.emoji {
 
 .width100 {
   width: 100%;
+}
+
+.panelEditor {
+  display: grid;
 }

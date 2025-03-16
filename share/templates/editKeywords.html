@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Keywords - WWW-Recorder</title>
+  <link rel="stylesheet" type="text/css" media="screen" href="WwwRecorder.css" />
+  <script type="module" src="./editKeywords.js"></script>
+</head>
+
+<body>
+  <h1>Edit Keywords</h1>
+  <div class="panelEditor">
+    <select id="selectKeywords" name="Keywords">
+    </select>
+    <div>
+      <button id="buttonAdd" type="button">Add/Update</button>
+      <button id="buttonRemove" type="button">Remove</button>
+    </div>
+    <input id="inputKey" type="text">
+    <textarea id="textareaNot" rows="5"></textarea>
+  </div>
+  <div>
+    <textarea id="Keywords" class="hide">[% keywords %]</textarea>
+  </div>
+</body>
+
+</html>
