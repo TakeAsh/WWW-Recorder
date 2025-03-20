@@ -55,11 +55,11 @@ sub getPrograms {
     my %programs  = ();
     foreach my $area (@areas) {
         foreach my $service (@services) {
-            my $t = localtime;
+            my $t = my $now = localtime;
             for ( my $i = 0; $i < 7; ++$i, $t += ONE_DAY ) {
                 sleep(1);
                 my $programDay = $self->getProgramDay( $area, $service, $t->ymd('-') ) or next;
-                my @prog       = map {
+                my @prog       = grep { $_->End() > $now } map {
                     $_->{'identifierGroup'}{'serviceName'} = $service->{'Channel'};
                     $_->{'identifierGroup'}{'areaName'}    = $area->{'areajp'};
                     $self->toProgram($_);
