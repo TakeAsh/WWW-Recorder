@@ -8,6 +8,44 @@ use Test::More::UTF8;
 use FindBin::libs "Bin=${FindBin::RealBin}";
 use WWW::Recorder::Util;
 
+subtest 'joinValid' => sub {
+    my @testcases = (
+        {   input    => [],
+            expected => '',
+        },
+        {   input    => [','],
+            expected => '',
+        },
+        {   input    => [ ',', undef ],
+            expected => '',
+        },
+        {   input    => [ ',', undef, undef ],
+            expected => '',
+        },
+        {   input    => [ ',', undef, 'A' ],
+            expected => 'A',
+        },
+        {   input    => [ ',', 'B', undef ],
+            expected => 'B',
+        },
+        {   input    => [ ',', 'A', 'B', 'C' ],
+            expected => 'A,B,C',
+        },
+        {   input    => [ ',', undef, 'A', undef, undef, 'B', undef, 'C', undef, undef ],
+            expected => 'A,B,C',
+        },
+        {   input    => [ ',', '', 'A', '', '', 'B', '', 'C', '', '' ],
+            expected => 'A,B,C',
+        },
+    );
+    foreach my $testcase (@testcases) {
+        is( joinValid( @{ $testcase->{'input'} } ),
+            $testcase->{'expected'},
+            join( ",", map { $_ || '_' } @{ $testcase->{'input'} } )
+        );
+    }
+};
+
 subtest 'normalizeSubtitle' => sub {
     my @testcases = (
         {   input    => '第0話',

@@ -35,7 +35,8 @@ use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 our @EXPORT = qw(
     loadConfig saveConfig
     decodeUtf8 encodeUtf8 getCookie setCookie
-    trim unifyLf LfToBr trimTextInBytes startsWith endsWith toJson decodeJson
+    trim unifyLf LfToBr trimTextInBytes startsWith endsWith joinValid
+    toJson decodeJson
     sortByUnicode cmpByUnicode
     connectDB getColumnsArray getColumnsHash getColumnsNames
     getProgramsByProvider
@@ -101,14 +102,16 @@ sub saveConfig {
 
 sub decodeUtf8 {
     my $text = shift or return '';
-    return Encode::is_utf8($text)
+    return NFC(
+        Encode::is_utf8($text)
         ? $text
-        : decode( 'UTF-8', $text );
+        : decode( 'UTF-8', $text )
+    );
 }
 
 sub encodeUtf8 {
     my $text = shift or return;
-    return encode( 'UTF-8', $text );
+    return encode( 'UTF-8', NFC($text) );
 }
 
 sub getCookie {
@@ -178,6 +181,11 @@ sub endsWith {
 sub toJson {
     my $obj = shift or return;
     return $json->encode($obj);
+}
+
+sub joinValid {
+    my $sep = shift || '';
+    return join( $sep, grep {$_} @_ );
 }
 
 sub decodeJson {
