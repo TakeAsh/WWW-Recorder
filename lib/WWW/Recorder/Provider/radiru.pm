@@ -2,9 +2,9 @@ package WWW::Recorder::Provider::radiru;
 use strict;
 use warnings;
 use utf8;
-use feature qw( say );
+use feature qw(say);
 use Encode;
-use YAML::Syck qw( LoadFile DumpFile Dump );
+use YAML::Syck qw(LoadFile DumpFile Dump);
 use Time::Seconds;
 use XML::Simple;
 use IPC::Cmd   qw(can_run run);
@@ -59,13 +59,18 @@ sub getPrograms {
             for ( my $i = 0; $i < 7; ++$i, $t += ONE_DAY ) {
                 sleep(1);
                 my $programDay = $self->getProgramDay( $area, $service, $t->ymd('-') ) or next;
-                my $flattened  = $self->flattenPrograms($programDay)                   or next;
-                my $prog       = $self->filter($flattened)                             or next;
+                my @prog       = map {
+                    $_->{'identifierGroup'}{'serviceName'} = $service->{'Channel'};
+                    $_->{'identifierGroup'}{'areaName'}    = $area->{'areajp'};
+                    $self->toProgram($_);
+                } @{ $programDay->{ $service->{'Service'} }{'publication'} }
+                    or next;
+                my $prog = $self->filter( [@prog] ) or next;
                 map { $programs{ $_->{'ID'} } = $_; } @{$prog};
             }
         }
     }
-    my @keys = sort( keys(%programs) );
+    my @keys = keys(%programs);
     return !@keys
         ? undef
         : [ map { $programs{$_} } @keys ];
@@ -96,24 +101,7 @@ sub getProgramDay {
         $self->log( $res->status_line . ': ' . $res->request->uri );
         return;
     }
-    return decodeJson( $res->decoded_content );
-}
-
-sub flattenPrograms {
-    my $self        = shift;
-    my $rawPrograms = shift or return;
-    my $now         = WWW::Recorder::TimePiece->new();
-    my @programs    = ();
-    foreach my $service ( keys( %{ $rawPrograms->{'list'} } ) ) {
-        foreach my $detail ( @{ $rawPrograms->{'list'}{$service} } ) {
-            my $program = $self->toProgram($detail);
-            if ( $program->End() < $now ) { next; }
-            push( @programs, $program );
-        }
-    }
-    return !@programs
-        ? undef
-        : [@programs];
+    return decodeJson( decodeUtf8( $res->decoded_content ) );
 }
 
 sub getProgramInfo {
@@ -159,42 +147,53 @@ sub makeFilenameRawBase {
 }
 
 sub toProgram {
-    my $self = shift;
-    my $d    = shift or return;
-    $d->{'start_time'} =~ s/([-+])(\d{2}):(\d{2})$//;    # drop timezone, force localtime
-    $d->{'end_time'}   =~ s/([-+])(\d{2}):(\d{2})$//;
-    my $start       = WWW::Recorder::TimePiece->strptime( $d->{'start_time'}, '%Y-%m-%dT%H:%M:%S' );
-    my $end         = WWW::Recorder::TimePiece->strptime( $d->{'end_time'},   '%Y-%m-%dT%H:%M:%S' );
-    my $desc        = join( "\n", grep {$_} map { $d->{$_} } qw(subtitle content music free rate) );
-    my $channel     = $self->Services()->ByService( $d->{'service'}{'id'} )->{'Channel'};
-    my $title       = $d->{'title'};
-    my $seriesTitle = $title;
-    $seriesTitle =~ s/\s*▽.+$//;
+    my $self         = shift;
+    my $d            = shift or return;
+    my $idGroup      = $d->{'identifierGroup'};
+    my $partOfSeries = $d->{'about'}{'partOfSeries'};
+    $d->{'startDate'} =~ s/([-+])(\d{2}):(\d{2})$//;    # drop timezone, force localtime
+    $d->{'endDate'}   =~ s/([-+])(\d{2}):(\d{2})$//;
+    my $start   = WWW::Recorder::TimePiece->strptime( $d->{'startDate'}, '%Y-%m-%dT%H:%M:%S' );
+    my $end     = WWW::Recorder::TimePiece->strptime( $d->{'endDate'},   '%Y-%m-%dT%H:%M:%S' );
+    my $service = $self->Services()->ByService( $idGroup->{'serviceId'} );
+    my $info    = joinValid(
+        "\n",
+        map {
+            my $artists = joinValid(
+                ",",
+                map {
+                    $_->{'name'} =~ s/\x{3000}//;
+                    normalizeTitle( $_->{'name'} );
+                } @{ $_->{'byArtist'} }
+            );
+            joinValid( "/", $_->{'name'}, $artists );
+        } @{ $d->{'misc'}{'musicList'} }
+    );
     return WWW::Recorder::Program->new(
         Provider => $self->name(),
-        ID       => $d->{'id'},
+        ID       => joinValid( "-", $idGroup->{'radioSeriesId'}, $idGroup->{'radioEpisodeId'} ),
         Extra    => {
-            SeriesTitle    => $seriesTitle,
-            SeriesUri      => $d->{'url'}{'pc'},
-            AreaId         => $d->{'area'}{'id'},
-            AreaName       => $d->{'area'}{'name'},
-            ServiceId      => $d->{'service'}{'id'},
-            ServiceName    => $d->{'service'}{'name'},
-            ServiceChannel => $channel,
-            SubTitle       => $d->{'subtitle'},
-            Content        => $d->{'content'},
-            Music          => $d->{'music'},
-            Free           => $d->{'free'},
-            Rate           => $d->{'rate'},
+            Id             => $d->{'id'},
+            SeriesId       => $idGroup->{'radioSeriesId'},
+            SeriesName     => $idGroup->{'radioSeriesName'},
+            SeriesUri      => $partOfSeries->{'canonical'},
+            EpisodeId      => $idGroup->{'radioEpisodeId'},
+            EpisodeName    => $idGroup->{'radioEpisodeName'},
+            AreaId         => $idGroup->{'areaId'},
+            AreaName       => $idGroup->{'areaName'},
+            ServiceId      => $idGroup->{'serviceId'},
+            ServiceName    => $idGroup->{'serviceName'},
+            ServiceChannel => $service->{'Channel'},
         },
-        Start       => $start,
-        End         => $end,
-        Duration    => ( $end - $start )->seconds,
-        Title       => $title,
-        Description => $desc,
-        Info        => $d->{'info'},
-        Performer   => $d->{'act'},
-        Uri         => $d->{'url'}{'episode'} || $d->{'url'}{'pc'},
+        Start    => $start,
+        End      => $end,
+        Duration => ( $end - $start )->seconds,
+        Title    => joinValid( " ", $idGroup->{'radioSeriesName'}, $idGroup->{'radioEpisodeName'} ),
+        Description => $d->{'description'},
+        Info        => $info,
+        Performer   =>
+            joinValid( " ", map { normalizeTitle( $_->{'name'} ) } @{ $d->{'misc'}{'actList'} } ),
+        Uri => $d->{'about'}{'canonical'} || $partOfSeries->{'canonical'},
     );
 }
 
@@ -295,9 +294,9 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use utf8;
-use feature qw( say );
+use feature qw(say);
 use Encode;
-use YAML::Syck qw( LoadFile DumpFile Dump );
+use YAML::Syck qw(LoadFile DumpFile Dump);
 use LWP::UserAgent;
 use XML::Simple;
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
@@ -356,10 +355,10 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use utf8;
-use feature qw( say );
+use feature qw(say);
 use Encode;
-use YAML::Syck   qw( LoadFile DumpFile Dump );
-use Scalar::Util qw( reftype );
+use YAML::Syck   qw(LoadFile DumpFile Dump);
+use Scalar::Util qw(reftype);
 use List::Util   qw(first);
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
@@ -396,9 +395,9 @@ package WWW::Recorder::Provider::radiru::Services;
 use strict;
 use warnings;
 use utf8;
-use feature qw( say );
+use feature qw(say);
 use Encode;
-use YAML::Syck qw( LoadFile DumpFile Dump );
+use YAML::Syck qw(LoadFile DumpFile Dump);
 use List::Util qw(first);
 use open ':std' => ( $^O eq 'MSWin32' ? ':locale' : ':utf8' );
 
@@ -406,9 +405,9 @@ $YAML::Syck::ImplicitUnicode = 1;
 
 my $confServices = {
     Services => [
-        { Service => 'n1', Channel => 'r1', StreamKey => 'r1hls', },
-        { Service => 'n2', Channel => 'r2', StreamKey => 'r2hls', },
-        { Service => 'n3', Channel => 'fm', StreamKey => 'fmhls', },
+        { Service => 'r1', Channel => 'r1', StreamKey => 'r1hls', },
+        { Service => 'r2', Channel => 'r2', StreamKey => 'r2hls', },
+        { Service => 'r3', Channel => 'fm', StreamKey => 'fmhls', },
     ],
 };
 
@@ -441,9 +440,9 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use utf8;
-use feature qw( say );
+use feature qw(say);
 use Encode;
-use YAML::Syck qw( LoadFile DumpFile Dump );
+use YAML::Syck qw(LoadFile DumpFile Dump);
 use FindBin::libs;
 use WWW::Recorder::Util;
 use parent 'WWW::Recorder::Program::Extra';
@@ -461,18 +460,29 @@ sub new {
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
     bless( $self, $class );
-    if ( $self->{SeriesTitle} ) { $self->SeriesTitle( $self->{SeriesTitle} ); }
-    if ( $self->{SeriesUri} )   { $self->SeriesUri( $self->{SeriesUri} ); }
+    if ( my $SeriesName = $self->{SeriesName} || $self->{SeriesTitle} ) {
+        $self->SeriesName($SeriesName);
+    }
+    if ( $self->{SeriesUri} ) { $self->SeriesUri( $self->{SeriesUri} ); }
+    if ( my $EpisodeName = $self->{EpisodeName} || $self->{SubTitle} ) {
+        $self->EpisodeName($EpisodeName);
+    }
     return $self;
 }
 
-sub SeriesTitle {
+sub SeriesId {
+    my $self = shift;
+    if (@_) { $self->{SeriesId} = shift; }
+    return $self->{SeriesId};
+}
+
+sub SeriesName {
     my $self = shift;
     if (@_) {
-        $self->{SeriesTitle} = normalizeSubtitle(shift);
+        $self->{SeriesName} = normalizeSubtitle(shift);
         $self->SeriesLink(1);
     }
-    return $self->{SeriesTitle};
+    return $self->{SeriesName};
 }
 
 sub SeriesUri {
@@ -486,11 +496,23 @@ sub SeriesUri {
 
 sub SeriesLink {
     my $self = shift;
-    if ( @_ && $self->{SeriesTitle} && $self->{SeriesUri} ) {
-        $self->{SeriesLink} = sprintf( "<a href=\"%s\" data-link-type=\"Series\">%s</a>",
-            $self->{SeriesUri}, $self->{SeriesTitle} );
+    if ( @_ && $self->{SeriesName} && $self->{SeriesUri} ) {
+        $self->{SeriesLink}
+            = "<a href=\"$self->{SeriesUri}\" data-link-type=\"Series\">$self->{SeriesName}</a>";
     }
     return $self->{SeriesLink};
+}
+
+sub EpisodeId {
+    my $self = shift;
+    if (@_) { $self->{EpisodeId} = shift; }
+    return $self->{EpisodeId};
+}
+
+sub EpisodeName {
+    my $self = shift;
+    if (@_) { $self->{EpisodeName} = normalizeSubtitle(shift); }
+    return $self->{EpisodeName};
 }
 
 sub AreaId {
@@ -521,36 +543,6 @@ sub ServiceChannel {
     my $self = shift;
     if (@_) { $self->{ServiceChannel} = shift; }
     return $self->{ServiceChannel};
-}
-
-sub SubTitle {
-    my $self = shift;
-    if (@_) { $self->{SubTitle} = shift; }
-    return $self->{SubTitle};
-}
-
-sub Content {
-    my $self = shift;
-    if (@_) { $self->{Content} = shift; }
-    return $self->{Content};
-}
-
-sub Music {
-    my $self = shift;
-    if (@_) { $self->{Music} = shift; }
-    return $self->{Music};
-}
-
-sub Free {
-    my $self = shift;
-    if (@_) { $self->{Free} = shift; }
-    return $self->{Free};
-}
-
-sub Rate {
-    my $self = shift;
-    if (@_) { $self->{Rate} = shift; }
-    return $self->{Rate};
 }
 
 1;
