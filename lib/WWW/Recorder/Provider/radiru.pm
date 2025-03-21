@@ -160,13 +160,13 @@ sub toProgram {
         "\n",
         map {
             my $artists = joinValid(
-                ",",
+                ", ",
                 map {
                     $_->{'name'} =~ s/\x{3000}//;
                     normalizeTitle( $_->{'name'} );
                 } @{ $_->{'byArtist'} }
             );
-            joinValid( "/", $_->{'name'}, $artists );
+            joinValid( " / ", normalizeTitle( $_->{'name'} ), $artists );
         } @{ $d->{'misc'}{'musicList'} }
     );
     return WWW::Recorder::Program->new(
@@ -188,7 +188,8 @@ sub toProgram {
         Start    => $start,
         End      => $end,
         Duration => ( $end - $start )->seconds,
-        Title    => joinValid( " ", $idGroup->{'radioSeriesName'}, $idGroup->{'radioEpisodeName'} ),
+        Title    => joinValid( " ", $idGroup->{'radioSeriesName'}, $idGroup->{'radioEpisodeName'} )
+            || $d->{'name'},
         Description => $d->{'description'},
         Info        => $info,
         Performer   =>
