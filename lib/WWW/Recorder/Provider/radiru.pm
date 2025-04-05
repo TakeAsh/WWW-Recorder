@@ -27,7 +27,7 @@ sub new {
         %{$params},
         name            => 'radiru',
         program_pattern =>
-            qr{\b(?<channel>r1|r2|fm)\.(?<id>\d+).(?<y>\d{4})-(?<m>\d{2})-(?<d>\d{2})\.(?<area>\d{3})\b},
+            qr{\b(?<broadcastEventId>(?<service>r1|r2|r3)-(?<area>\d{3})-(?<y>\d{4})(?<m>\d{2})(?<d>\d{2})(?<id>\d+))\b},
     );
     $self->{SERVICES} = WWW::Recorder::Provider::radiru::Services->new();
     bless( $self, $class );
@@ -56,14 +56,13 @@ sub getPrograms {
     foreach my $area (@areas) {
         foreach my $service (@services) {
             my $t = my $now = localtime;
-            for ( my $i = 0; $i < 7; ++$i, $t += ONE_DAY ) {
+            $t += ONE_DAY * 6;
+            for ( my $i = 0; $i < 7; ++$i, $t -= ONE_DAY ) {
                 sleep(1);
                 my $programDay = $self->getProgramDay( $area, $service, $t->ymd('-') ) or next;
-                my @prog       = grep { $_->End() > $now } map {
-                    $_->{'identifierGroup'}{'serviceName'} = $service->{'Channel'};
-                    $_->{'identifierGroup'}{'areaName'}    = $area->{'areajp'};
-                    $self->toProgram($_);
-                } @{ $programDay->{ $service->{'Service'} }{'publication'} }
+                my @prog       = grep { $_->End() > $now }
+                    map { $self->toProgram($_); }
+                    reverse( @{ $programDay->{ $service->{'Service'} }{'publication'} } )
                     or next;
                 my $prog = $self->filter( [@prog] ) or next;
                 map { $programs{ $_->{'ID'} } = $_; } @{$prog};
@@ -116,13 +115,8 @@ sub getProgramInfoRaw {
     my $self    = shift;
     my $uri     = shift or return;
     my $match   = shift or return;
-    my $service = $self->Services()->ByChannel( $match->{'channel'} )->{'Service'};
-    return $self->getProgramDetail(
-        {   area    => $match->{'area'},
-            service => $service,
-            dateid  => join( "", $match->{'y'}, $match->{'m'}, $match->{'d'}, $match->{'id'} ),
-        }
-    );
+    my $service = $self->Services()->ByService( $match->{'service'} );
+    return $self->getProgramDetail( { %{$match}, service => $service, } );
 }
 
 sub getProgramDetail {
@@ -133,11 +127,8 @@ sub getProgramDetail {
         $self->log( $res->status_line . ': ' . $res->request->uri );
         return;
     }
-    my $detail  = decodeJson( $res->decoded_content ) or return;
-    my $service = ( keys( %{ $detail->{'list'} } ) )[0];
-    return !$service
-        ? $detail->{'list'}
-        : $detail->{'list'}{$service}[0];
+    my $detail = decodeJson( decodeUtf8( $res->decoded_content ) ) or return;
+    return $detail;
 }
 
 sub makeFilenameRawBase {
@@ -151,38 +142,27 @@ sub toProgram {
     my $d            = shift or return;
     my $idGroup      = $d->{'identifierGroup'};
     my $partOfSeries = $d->{'about'}{'partOfSeries'};
+    my $id           = joinValid( "-", $idGroup->{'radioSeriesId'}, $idGroup->{'radioEpisodeId'} )
+        || $d->{'id'};
     $d->{'startDate'} =~ s/([-+])(\d{2}):(\d{2})$//;    # drop timezone, force localtime
     $d->{'endDate'}   =~ s/([-+])(\d{2}):(\d{2})$//;
-    my $start   = WWW::Recorder::TimePiece->strptime( $d->{'startDate'}, '%Y-%m-%dT%H:%M:%S' );
-    my $end     = WWW::Recorder::TimePiece->strptime( $d->{'endDate'},   '%Y-%m-%dT%H:%M:%S' );
-    my $service = $self->Services()->ByService( $idGroup->{'serviceId'} );
-    my $info    = joinValid(
-        "\n",
-        map {
-            my $artists = joinValid(
-                ", ",
-                map {
-                    $_->{'name'} =~ s/\x{3000}//;
-                    normalizeTitle( $_->{'name'} );
-                } @{ $_->{'byArtist'} }
-            );
-            joinValid( " / ", normalizeTitle( $_->{'name'} ), $artists );
-        } @{ $d->{'misc'}{'musicList'} }
-    );
+    my $start     = WWW::Recorder::TimePiece->strptime( $d->{'startDate'}, '%Y-%m-%dT%H:%M:%S' );
+    my $end       = WWW::Recorder::TimePiece->strptime( $d->{'endDate'},   '%Y-%m-%dT%H:%M:%S' );
+    my $service   = $self->Services()->ByService( $idGroup->{'serviceId'} );
+    my $seriesUri = $partOfSeries->{'canonical'} || $partOfSeries->{'sameAs'}[0]{'url'};
     return WWW::Recorder::Program->new(
         Provider => $self->name(),
-        ID       => joinValid( "-", $idGroup->{'radioSeriesId'}, $idGroup->{'radioEpisodeId'} ),
+        ID       => $id,
         Extra    => {
             Id             => $d->{'id'},
             SeriesId       => $idGroup->{'radioSeriesId'},
-            SeriesName     => $idGroup->{'radioSeriesName'},
-            SeriesUri      => $partOfSeries->{'canonical'},
+            SeriesName     => $idGroup->{'radioSeriesName'} || $partOfSeries->{'sameAs'}[0]{'name'},
+            SeriesUri      => $seriesUri,
             EpisodeId      => $idGroup->{'radioEpisodeId'},
             EpisodeName    => $idGroup->{'radioEpisodeName'},
             AreaId         => $idGroup->{'areaId'},
-            AreaName       => $idGroup->{'areaName'},
+            AreaName       => $d->{'location'}{'name'},
             ServiceId      => $idGroup->{'serviceId'},
-            ServiceName    => $idGroup->{'serviceName'},
             ServiceChannel => $service->{'Channel'},
         },
         Start    => $start,
@@ -191,11 +171,58 @@ sub toProgram {
         Title    => joinValid( " ", $idGroup->{'radioSeriesName'}, $idGroup->{'radioEpisodeName'} )
             || $d->{'name'},
         Description => $d->{'description'},
-        Info        => $info,
-        Performer   =>
-            joinValid( " ", map { normalizeTitle( $_->{'name'} ) } @{ $d->{'misc'}{'actList'} } ),
-        Uri => $d->{'about'}{'canonical'} || $partOfSeries->{'canonical'},
+        Info        => $self->flattenMusicList( $d->{'misc'}{'musicList'} ),
+        Performer   => $self->flattenActList( $d->{'misc'}{'actList'} ),
+        Uri         => $d->{'about'}{'canonical'} || $seriesUri,
     );
+}
+
+sub flattenMusicList {
+    my $self      = shift;
+    my $musicList = shift or return;
+    my $basic     = {
+        lyricist => '作詞',
+        composer => '作曲',
+        arranger => '編曲',
+    };
+    return joinValid(
+        "\n",
+        map {
+            my $info     = $_;
+            my @artists1 = map { $basic->{$_} . ':' . $self->normalizeName( $info->{$_} ) }
+                grep { $info->{$_} } qw(lyricist composer arranger);
+            my @artists2
+                = map { joinValid( ':', $_->{'part'}, $self->normalizeName( $_->{'name'} ) ); }
+                @{ $info->{'byArtist'} };
+            joinValid(
+                " / ",
+                normalizeTitle( $_->{'name'} ),
+                joinValid( ", ", @artists1, @artists2 )
+            );
+        } @{$musicList}
+    );
+}
+
+sub flattenActList {
+    my $self    = shift;
+    my $actList = shift or return;
+    return joinValid(
+        ", ",
+        map {
+            joinValid(
+                ':',
+                $self->normalizeName( $_->{'role'} ),
+                $self->normalizeName( $_->{'name'} )
+            )
+        } @{$actList}
+    );
+}
+
+sub normalizeName {
+    my $self = shift;
+    my $name = shift or return;
+    $name =~ s/\x{3000}//;
+    return normalizeTitle($name);
 }
 
 sub record {
@@ -474,7 +501,7 @@ sub new {
 sub SeriesId {
     my $self = shift;
     if (@_) { $self->{SeriesId} = shift; }
-    return $self->{SeriesId};
+    return $self->{SeriesId} || '';
 }
 
 sub SeriesName {
@@ -483,7 +510,7 @@ sub SeriesName {
         $self->{SeriesName} = normalizeSubtitle(shift);
         $self->SeriesLink(1);
     }
-    return $self->{SeriesName};
+    return $self->{SeriesName} || '';
 }
 
 sub SeriesUri {
@@ -492,7 +519,7 @@ sub SeriesUri {
         $self->{SeriesUri} = shift;
         $self->SeriesLink(1);
     }
-    return $self->{SeriesUri};
+    return $self->{SeriesUri} || '';
 }
 
 sub SeriesLink {
@@ -501,49 +528,43 @@ sub SeriesLink {
         $self->{SeriesLink}
             = "<a href=\"$self->{SeriesUri}\" data-link-type=\"Series\">$self->{SeriesName}</a>";
     }
-    return $self->{SeriesLink};
+    return $self->{SeriesLink} || '';
 }
 
 sub EpisodeId {
     my $self = shift;
     if (@_) { $self->{EpisodeId} = shift; }
-    return $self->{EpisodeId};
+    return $self->{EpisodeId} || '';
 }
 
 sub EpisodeName {
     my $self = shift;
     if (@_) { $self->{EpisodeName} = normalizeSubtitle(shift); }
-    return $self->{EpisodeName};
+    return $self->{EpisodeName} || '';
 }
 
 sub AreaId {
     my $self = shift;
     if (@_) { $self->{AreaId} = shift; }
-    return $self->{AreaId};
+    return $self->{AreaId} || '';
 }
 
 sub AreaName {
     my $self = shift;
     if (@_) { $self->{AreaName} = shift; }
-    return $self->{AreaName};
+    return $self->{AreaName} || '';
 }
 
 sub ServiceId {
     my $self = shift;
     if (@_) { $self->{ServiceId} = shift; }
-    return $self->{ServiceId};
-}
-
-sub ServiceName {
-    my $self = shift;
-    if (@_) { $self->{ServiceName} = shift; }
-    return $self->{ServiceName};
+    return $self->{ServiceId} || '';
 }
 
 sub ServiceChannel {
     my $self = shift;
     if (@_) { $self->{ServiceChannel} = shift; }
-    return $self->{ServiceChannel};
+    return $self->{ServiceChannel} || '';
 }
 
 1;
