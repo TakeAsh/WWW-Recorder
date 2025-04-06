@@ -101,5 +101,5 @@ GetColumns: |
   WHERE   `TABLE_NAME` = :TableName-VARCHAR
   ORDER BY `ORDINAL_POSITION`;
 DeleteOldPrograms:
-  DELETE FROM `Programs` 
-  WHERE `Provider` in ( :Provider+-VARCHAR ) AND `Start` < :Start-VARCHAR
+  DELETE FROM `Programs` WHERE `Start` < :Start-VARCHAR;
+  OPTIMIZE TABLE `Programs`;

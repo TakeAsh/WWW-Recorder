@@ -4,10 +4,10 @@ use strict;
 use warnings;
 use Carp qw(croak);
 use utf8;
-use feature qw( say );
+use feature qw(say);
 use Encode;
 use Exporter 'import';
-use YAML::Syck qw( LoadFile DumpFile Dump );
+use YAML::Syck qw(LoadFile DumpFile Dump);
 use Time::Piece;
 use File::Basename;
 use File::Spec;
@@ -32,6 +32,7 @@ our @EXPORT = qw(
     removePrograms
     exportAll
     getProgramById
+    deleteOldPrograms
 );
 
 $YAML::Syck::ImplicitUnicode = 1;
@@ -352,6 +353,17 @@ sub getProgramById {
     $sth->finish;
     $dbh->disconnect;
     return $p;
+}
+
+sub deleteOldPrograms {
+    my $limit     = shift or return;
+    my $dbh       = connectDB( $conf->{'DbInfo'} );
+    my $sthDelete = $dbh->prepare_ex( $sql->{'DeleteOldPrograms'}, { Start => $limit, } )
+        or die($DBI::errstr);
+    my $rv = $sthDelete->execute() or die($DBI::errstr);
+    $sthDelete->finish;
+    $dbh->disconnect;
+    say("Delete programs: $rv");
 }
 
 1;
