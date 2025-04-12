@@ -170,7 +170,7 @@ sub toProgram {
         Duration => ( $end - $start )->seconds,
         Title    => joinValid( " ", $idGroup->{'radioSeriesName'}, $idGroup->{'radioEpisodeName'} )
             || $d->{'name'},
-        Description => $d->{'description'},
+        Description => joinValid( "\n", $d->{'about'}{'description'}, $d->{'description'} ),
         Info        => $self->flattenMusicList( $d->{'misc'}{'musicList'} ),
         Performer   => $self->flattenActList( $d->{'misc'}{'actList'} ),
         Uri         => $d->{'about'}{'canonical'} || $seriesUri,
