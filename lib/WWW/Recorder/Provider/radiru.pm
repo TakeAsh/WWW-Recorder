@@ -176,7 +176,9 @@ sub toProgram {
         Description => joinValid( "\n", $d->{'about'}{'description'}, $d->{'description'} ),
         Info        => $self->flattenMusicList( $d->{'misc'}{'musicList'} ),
         Performer   => $self->flattenActList( $d->{'misc'}{'actList'} ),
-        Uri         => $d->{'about'}{'canonical'} || $seriesUri,
+        Uri         => $d->{'about'}{'canonical'}
+            || $seriesUri
+            || "https://www.nhk.or.jp/radio/hensei/detail.html?$d->{id}",
     );
 }
 
