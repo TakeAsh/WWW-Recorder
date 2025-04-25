@@ -61,7 +61,10 @@ sub getPrograms {
                 sleep(1);
                 my $programDay = $self->getProgramDay( $area, $service, $t->ymd('-') ) or next;
                 my @prog       = grep { $_->End() > $now }
-                    map { $self->toProgram($_); }
+                    map {
+                    $_->{'identifierGroup'}{'areaName'} ||= $area->{'areajp'};
+                    $self->toProgram($_);
+                    }
                     reverse( @{ $programDay->{ $service->{'Service'} }{'publication'} } )
                     or next;
                 my $prog = $self->filter( [@prog] ) or next;
@@ -161,7 +164,7 @@ sub toProgram {
             EpisodeId      => $idGroup->{'radioEpisodeId'},
             EpisodeName    => $idGroup->{'radioEpisodeName'},
             AreaId         => $idGroup->{'areaId'},
-            AreaName       => $d->{'location'}{'name'},
+            AreaName       => $idGroup->{'areaName'},
             ServiceId      => $idGroup->{'serviceId'},
             ServiceChannel => $service->{'Channel'},
         },
