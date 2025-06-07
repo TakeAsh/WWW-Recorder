@@ -86,41 +86,43 @@ subtest 'Areas' => sub {
 subtest 'Services' => sub {
     my $services = new_ok( 'WWW::Recorder::Provider::radiru::Services', undef, '$services' );
     my @testcases_ByService = (
-        { input => 'n1', expected => 'n1', },
-        { input => 'n2', expected => 'n2', },
-        { input => 'n3', expected => 'n3', },
+        { input => 'r1', expected => 'r1', },
+        { input => 'r2', expected => 'r2', },
+        { input => 'r3', expected => 'r3', },
     );
     foreach my $testcase_ByService (@testcases_ByService) {
-        is( $services->ByService( $testcase_ByService->{'input'} )->{'Service'},
+        my $service = $services->ByService( $testcase_ByService->{'input'} );
+        isnt( $service, undef, '$service' );
+        is( $service->{'Service'},
             $testcase_ByService->{'expected'},
             'ByService:' . $testcase_ByService->{'input'}
         );
     }
     my @testcases_ByChannel = (
-        { input => 'r1', expected => 'n1', },
-        { input => 'r2', expected => 'n2', },
-        { input => 'fm', expected => 'n3', },
+        { input => 'r1', expected => 'r1', },
+        { input => 'r2', expected => 'r2', },
+        { input => 'fm', expected => 'r3', },
     );
     foreach my $testcase_ByChannel (@testcases_ByChannel) {
-        is( $services->ByChannel( $testcase_ByChannel->{'input'} )->{'Service'},
+        my $service = $services->ByChannel( $testcase_ByChannel->{'input'} );
+        isnt( $service, undef, '$service' );
+        is( $service->{'Service'},
             $testcase_ByChannel->{'expected'},
             'ByChannel:' . $testcase_ByChannel->{'input'}
         );
     }
-    is_deeply( [ map { $_->{'Service'} } $services->getList() ], [qw(n1 n2 n3)], 'getList' );
+    is_deeply( [ map { $_->{'Service'} } $services->getList() ], [qw(r1 r2 r3)], 'getList' );
 };
 
 subtest 'ConfigWeb' => sub {
     my $configWeb = new_ok( 'WWW::Recorder::Provider::radiru::ConfigWeb', undef, '$configWeb' );
     isa_ok( $configWeb->Areas(), 'WWW::Recorder::Provider::radiru::Areas', 'Areas()' );
-    like(
-        $configWeb->UrlProgramDay(),
-        qr{^https?://api.nhk.or.jp/.*/[^\.]+\.json$},
+    is( $configWeb->UrlProgramDay(),
+        'https://api.nhk.jp/r7/pg/date/{service}/{area}/{date}.json',
         'UrlProgramDay()'
     );
-    like(
-        $configWeb->UrlProgramDetail(),
-        qr{^https?://api.nhk.or.jp/.*/[^\.]+\.json$},
+    is( $configWeb->UrlProgramDetail(),
+        'https://api.nhk.jp/r7/t/broadcastevent/be/{broadcastEventId}.json',
         'UrlProgramDetail()'
     );
 };
