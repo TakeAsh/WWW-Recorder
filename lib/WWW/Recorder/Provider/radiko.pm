@@ -2,15 +2,16 @@ package WWW::Recorder::Provider::radiko;
 use strict;
 use warnings;
 use utf8;
-use feature qw( say );
+use feature qw(say);
 use Encode;
-use YAML::Syck qw( LoadFile DumpFile Dump );
+use YAML::Syck qw(LoadFile DumpFile Dump);
 use Time::Seconds;
 use XML::Simple;
 use MIME::Base64;
 use IPC::Cmd   qw(can_run run);
 use List::Util qw(first);
 use Digest::SHA2;
+use URI;
 use FindBin::libs;
 use WWW::Recorder::Util;
 use WWW::Recorder::TimePiece;
@@ -299,23 +300,17 @@ sub getStream {
         if ( $duration >= 2 * 60 * 60 - 5 ) {    # over 2hr
             $duration = 1 * 60 * 60;             # limit 1hr
         }
-        my $fname      = join( " ", $fnameBase, $start->toPostfix() ) . '.m4a';
-        my $pathWork   = "${dest}/.${fname}";
-        my $pathFinish = "${dest}/${fname}";
-        my $authToken  = $self->getAuthToken()          or next;
-        my $streamUris = $self->getStreamUris($station) or next;
-        my $streamUri  = (
-            first {
-                       index( $_->{'playlist_create_url'}, $station ) >= 0
-                    && $_->{'timefree'} == 0
-                    && $_->{'areafree'} == 0
-            } @{$streamUris}
-        ) or next;
-        my $cmd = sprintf(
+        my $fname       = join( " ", $fnameBase, $start->toPostfix() ) . '.m4a';
+        my $pathWork    = "${dest}/.${fname}";
+        my $pathFinish  = "${dest}/${fname}";
+        my $authToken   = $self->getAuthToken()         or next;
+        my $streamUri   = $self->getStreamUri($station) or next;
+        my $playlistUri = $self->makePlaylistUri( $station, $authToken, $streamUri );
+        my $cmd         = sprintf(
             '%s -y -headers %s -i %s -t %d -c copy -movflags faststart %s',
             $ffmpeg,
-            sysQuote( 'X-Radiko-AuthToken: ' . $authToken ),
-            sysQuote( $streamUri->{'playlist_create_url'} ),
+            sysQuote( $playlistUri->{'FlattenHeaders'} ),
+            sysQuote( $playlistUri->{'UriFull'} ),
             $duration + 60,
             sysQuote($pathWork)
         );
@@ -342,8 +337,8 @@ sub getAuthToken {
         undef,
         $conf->{'AuthHeaders'},
     )->call();
-    if ( !$res1->is_success ) {
-        $self->log( 'Failed Auth1: ' . $res1->status_line );
+    if ( !$res1->is_success || $res1->code != 200 ) {
+        $self->log( 'Failed Auth1: ' . $res1->status_line . ', ' . $res1->decoded_content );
         return;
     }
     my $authToken  = $res1->header('X-RADIKO-AUTHTOKEN');
@@ -352,10 +347,9 @@ sub getAuthToken {
     my $tmpAuthKey = substr( $conf->{'AuthKey'}, $keyOffset, $keyLength );
     my $partialKey = decode( 'utf8', encode_base64( encode( 'utf8', $tmpAuthKey ) ) );
     my $header2    = {
+        %{ $conf->{'AuthHeaders'} },
         'X-Radiko-AuthToken'  => $authToken,
         'X-Radiko-PartialKey' => $partialKey,
-        'X-Radiko-Device'     => 'pc',
-        'X-Radiko-User'       => 'dummy_user',
     };
     my $res2 = $self->request(
         GET => $conf->{'Uris'}{'Auth2'},
@@ -363,11 +357,12 @@ sub getAuthToken {
         $header2,
     )->call();
 
-    if ( !$res2->is_success ) {
-        $self->log( 'Failed Auth2: ' . $res2->status_line );
+    if ( !$res2->is_success || $res2->code != 200 ) {
+        $self->log( 'Failed Auth2: ' . $res2->status_line . ', ' . $res2->decoded_content );
         return;
     }
-    return $authToken;
+    $res2->decoded_content =~ /(?<Id>[^,]+),(?<NameJp>[^,]+),(?<NameEn>[^,]+?)\s*$/;
+    return { Token => $authToken, Area => {%+}, };
 }
 
 sub getStreamUris {
@@ -391,6 +386,47 @@ sub getStreamUris {
     return !$urls
         ? undef
         : $urls->{'url'};
+}
+
+sub getStreamUri {
+    my $self       = shift;
+    my $station    = shift                          or return;
+    my $streamUris = $self->getStreamUris($station) or return;
+    my $streamUri  = first {
+               $_->{'timefree'} == 0
+            && $_->{'areafree'} == 0
+            && ( index( $_->{'playlist_create_url'}, 'smartstream.ne.jp' ) >= 0 )
+    } @{$streamUris};
+    return $streamUri && $streamUri->{'playlist_create_url'};
+}
+
+sub makePlaylistUri {
+    my $self      = shift;
+    my $station   = shift or return;
+    my $authToken = shift or return;
+    my $streamUri = shift or return;
+    my $uri       = URI->new($streamUri);
+    my $query     = {
+        l          => 15,
+        type       => 'b',
+        lsid       => 'dummy',
+        station_id => $station,
+    };
+    $uri->query_form( %{$query} );
+    my $h = {
+        'Origin'             => 'https://radiko.jp',
+        'Referer'            => 'https://radiko.jp/',
+        'X-Radiko-AreaId'    => $authToken->{'Area'}{'Id'} || '',
+        'X-Radiko-AuthToken' => $authToken->{'Token'}      || '',
+    };
+    my $flatten = join( "\r\n", map {"$_: $h->{$_}"} sort( keys( %{$h} ) ) );    # for ffmpeg
+    return {
+        Uri            => $streamUri,
+        Query          => $query,
+        UriFull        => "$uri",
+        Headers        => $h,
+        FlattenHeaders => $flatten,
+    };
 }
 
 package WWW::Recorder::Program::Extra::radiko;
