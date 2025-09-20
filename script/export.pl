@@ -3,9 +3,9 @@
 use strict;
 use warnings;
 use utf8;
-use feature qw( say );
+use feature qw(say);
 use Encode;
-use YAML::Syck qw( LoadFile Dump );
+use YAML::Syck qw(LoadFile DumpFile Dump);
 use FindBin::libs "Bin=${FindBin::RealBin}";
 use WWW::Recorder;
 use Term::Encoding qw(term_encoding);
