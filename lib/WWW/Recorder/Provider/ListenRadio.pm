@@ -184,6 +184,11 @@ sub getStream {
     $self->setStatus( $dbh, $program );
     $program->Status('FAILED');
     my $channel = $self->Channels()->byId( $extra->ChannelId() ) or return;
+    my %headers = (
+        Origin  => 'https://listenradio.jp',
+        Referer => 'https://listenradio.jp/',
+    );
+    my $headers = join( "\n", ( map {"$_: $headers{$_}"} keys(%headers) ) );
     my $success = 0;
 
     while (1) {
@@ -197,8 +202,8 @@ sub getStream {
         my $pathWork   = "${dest}/.${fname}.m4a";
         my $pathFinish = "${dest}/${fname}.m4a";
         my $cmd        = sprintf(
-            '%s -y -i %s -t %d -bsf:a aac_adtstoasc -c copy -movflags faststart %s',
-            $ffmpeg,
+            '%s -y -headers %s -i %s -t %d -bsf:a aac_adtstoasc -c copy -movflags faststart %s',
+            $ffmpeg, sysQuote($headers),
             sysQuote( $channel->{'ChannelHls'} ),
             $duration + 60,
             sysQuote($pathWork)
