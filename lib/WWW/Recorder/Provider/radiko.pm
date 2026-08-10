@@ -12,6 +12,7 @@ use IPC::Cmd   qw(can_run run);
 use List::Util qw(first);
 use Digest::SHA2;
 use URI;
+use File::Slurper qw(write_text write_binary);
 use FindBin::libs;
 use WWW::Recorder::Util;
 use WWW::Recorder::TimePiece;
@@ -26,6 +27,7 @@ my $conf = {
         Area              => 'https://radiko.jp/area',
         ProgramsByArea    => 'https://radiko.jp/v3/program/date/{date}/{area}.xml',
         ProgramsByStation => 'https://radiko.jp/v3/program/station/date/{date}/{station}.xml',
+        Check             => 'https://radiko.jp/ap/member/webapi/v2/member/login/check',
         Auth1             => 'https://radiko.jp/v2/api/auth1',
         Auth2             => 'https://radiko.jp/v2/api/auth2',
         Streams           => 'https://radiko.jp/v3/station/stream/{App}/{Station}.xml',
@@ -34,8 +36,8 @@ my $conf = {
     AuthHeaders => {
         'X-Radiko-App'         => 'pc_html5',
         'X-Radiko-App-Version' => '0.0.1',
+        'X-Radiko-Connection'  => 'wifi',
         'X-Radiko-Device'      => 'pc',
-        'X-Radiko-User'        => 'dummy_user',
     },
     Separator => ';',
 };
@@ -48,7 +50,7 @@ sub new {
         %{$params},
         name            => 'radiko',
         program_pattern =>
-            qr{^https://radiko.jp/#!/ts/(?<station>[^/]+)/(?<date>\d{8})(?<time>\d{6})\b},
+            qr{^https://radiko\.jp/(#!/ts/(?<station>[^/]+)/(?<date>\d{8})(?<time>\d{6})|share/\?sid=(?<station2>[^&]+)&t=(?<date2>\d{8})(?<time2>\d{6}))\b},
     );
     bless( $self, $class );
     $self->area( $params->{'area'} );
@@ -79,9 +81,9 @@ sub getPrograms {
             date => $t->ymd(''),
             area => $self->area(),
         ) or next;
-        my $progs   = $self->toPrograms($infos) or next;
-        my $filered = $self->filter($progs)     or next;
-        push( @programs, @{$filered} );
+        my $progs    = $self->toPrograms($infos) or next;
+        my $filtered = $self->filter($progs)     or next;
+        push( @programs, @{$filtered} );
     }
     return !@programs
         ? undef
@@ -107,15 +109,24 @@ sub getProgramInfo {
 }
 
 sub getProgramInfoRaw {
-    my $self  = shift;
-    my $uri   = shift or return;
-    my $match = shift or return;
+    my $self     = shift;
+    my $uri      = shift or return;
+    my $match    = shift or return;
+    my $date     = $match->{'date'} || $match->{'date2'} || '';
+    my $time     = $match->{'time'} || $match->{'time2'} || '';
+    my $datetime = "${date}${time}";
+    $date =~ s{(?<y>\d{4})(?<m>\d{2})(?<d>\d{2})}{$+{y}-$+{m}-$+{d}};
+    $date = WWW::Recorder::TimePiece->new($date);
+
+    if ( '000000' le $time && $time lt '050000' ) {
+        $date -= ONE_DAY;
+    }
     my $infos = $self->getInfos(
         api     => 'ProgramsByStation',
-        date    => $match->{'date'},
-        station => $match->{'station'},
+        date    => $date->ymd(''),
+        station => $match->{'station'} || $match->{'station2'} || '',
     ) or return;
-    return $self->matchStart( $infos, $match->{'date'} . $match->{'time'} );
+    return $self->matchStart( $infos, $datetime );
 }
 
 sub getInfos {
@@ -300,23 +311,83 @@ sub getStream {
         if ( $duration >= 2 * 60 * 60 - 5 ) {    # over 2hr
             $duration = 1 * 60 * 60;             # limit 1hr
         }
+        my $dirWork = "${dest}/" . join( '_', $self->name, $extra->Station, $extra->DateTime );
+        if ( !( -d $dirWork ) ) {
+            mkdir($dirWork) or die("Failed to make directory '${dirWork}': $!");
+        }
         my $fname       = join( " ", $fnameBase, $start->toPostfix() ) . '.m4a';
         my $pathWork    = "${dest}/.${fname}";
         my $pathFinish  = "${dest}/${fname}";
         my $authToken   = $self->getAuthToken()         or next;
         my $streamUri   = $self->getStreamUri($station) or next;
         my $playlistUri = $self->makePlaylistUri( $station, $authToken, $streamUri );
-        my $cmd         = sprintf(
-            '%s -y -headers %s -i %s -t %d -c copy -movflags faststart %s',
-            $ffmpeg,
-            sysQuote( $playlistUri->{'FlattenHeaders'} ),
-            sysQuote( $playlistUri->{'UriFull'} ),
-            $duration + 60,
-            sysQuote($pathWork)
-        );
+        my $res         = $self->request(
+            GET => $playlistUri->{'UriFull'},
+            undef,
+            $playlistUri->{'Headers'},
+        )->call();
+
+        if ( !$res->is_success ) {
+
+            #say 'Failed to get playlist: ' . $res->decoded_content;
+            return 0;
+        }
+        write_text( "${dirWork}/playlist.m3u8", $res->decoded_content );
+        my @uriMedia = grep { !startsWith( $_, '#' ) } split( "\n", $res->decoded_content );
+
+        #say $uriMedia[0];
+        my @mediaHeader = ();
+        my %medias      = ();
+        while ( ( my $now = WWW::Recorder::TimePiece->new() ) < ( $end + ONE_MINUTE ) ) {
+            $res = $self->request(
+                GET => $uriMedia[0] . '&_=' . $now->epoch . '999',
+                undef,
+                $playlistUri->{'Headers'},
+            )->call();
+
+            #say $res->status_line;
+            #say $res->decoded_content;
+            if ( !$res->is_success ) {
+                sleep(1);
+                next;
+            }
+            my @medias2 = split( "\n", $res->decoded_content );
+            if ( !@mediaHeader ) {
+                while ( my $line = shift(@medias2) ) {
+                    if ( !startsWith( $line, '#EXT-X-PROGRAM-DATE-TIME:' ) ) {
+                        push( @mediaHeader, $line );
+                    } else {
+                        unshift( @medias2, $line );
+                        last;
+                    }
+                }
+            }
+            while ( my $media3 = $self->getMediaInfo( \@medias2 ) ) {
+                if ( exists $medias{ $media3->{'Datetime'} } ) { next; }
+                $medias{ $media3->{'Datetime'} } = $media3;
+                $res = $self->request(
+                    GET => $media3->{'Uri'},
+                    undef,
+                    $playlistUri->{'Headers'},
+                )->call();
+                if ( $res->is_success ) {
+                    write_binary( "${dirWork}/$media3->{File}", $res->content );
+                }
+            }
+            sleep(5);
+        }
+        my $fnameList = "${dirWork}/files.txt";
+        my $medialist
+            = join( "\n", map { "file ${dirWork}/" . $medias{$_}{'File'} } sort( keys(%medias) ) )
+            . "\n";
+        write_text( $fnameList, $medialist );
+        my $cmd = sprintf( '%s -y -f concat -safe 0 -i %s -c copy -movflags faststart %s',
+            $ffmpeg, sysQuote($fnameList), sysQuote($pathWork) );
         my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf )
             = run( command => $cmd, verbose => 0, timeout => 120 * 60 );
         my $messages = integrateErrorMessages( $error_message, $stdout_buf, $stderr_buf );
+
+        #say $messages->{StdErr};
 
         if ( !( -f $pathWork ) ) {
             $self->log( "Failed to get stream", $messages->{'All'} );
@@ -330,39 +401,86 @@ sub getStream {
     return $success;
 }
 
+sub getMediaInfo {
+    my $self  = shift;
+    my $media = shift or return undef;
+    while ( my $line = shift( @{$media} ) ) {
+        if ( !startsWith( $line, '#EXT-X-PROGRAM-DATE-TIME:' ) ) { next; }
+        unshift( @{$media}, $line );
+        last;
+    }
+    if ( !@{$media} ) { return undef; }
+    my $datetime = trim( shift( @{$media} ) );
+    my $len      = trim( shift( @{$media} ) );
+    my $uri      = trim( shift( @{$media} ) );
+    $datetime =~ s{^#EXT-X-PROGRAM-DATE-TIME:}{};
+    $len      =~ s{^#EXTINF:}{};
+    $uri      =~ m{(?<file>[^\/]+)$};
+    return {
+        Datetime => $datetime,
+        Len      => $len,
+        Uri      => $uri,
+        File     => $+{'file'},
+    };
+}
+
 sub getAuthToken {
-    my $self = shift;
-    my $res1 = $self->request(
+    my $self    = shift;
+    my $userId  = $self->generateUserId();
+    my $headers = { %{ $conf->{'AuthHeaders'} }, 'X-Radiko-User' => $userId, };
+    my $res1    = $self->request(
+        GET => $conf->{'Uris'}{'Check'},
+        undef,
+        $headers,
+    )->call();
+    my $session = '';
+    my @cookies = $res1->header('Set-Cookie');
+    foreach my $c (@cookies) {
+        if ( $c =~ /radiko_session=(?<Session>[^;]+)/ ) {
+            $session = $+{'Session'};
+            last;
+        }
+    }
+    my $res2 = $self->request(
         GET => $conf->{'Uris'}{'Auth1'},
         undef,
-        $conf->{'AuthHeaders'},
+        $headers,
     )->call();
-    if ( !$res1->is_success || $res1->code != 200 ) {
-        $self->log( 'Failed Auth1: ' . $res1->status_line . ', ' . $res1->decoded_content );
+    if ( !$res2->is_success || $res2->code != 200 ) {
+        $self->log( 'Failed Auth1: ' . $res2->status_line . ', ' . $res2->decoded_content );
         return;
     }
-    my $authToken  = $res1->header('X-RADIKO-AUTHTOKEN');
-    my $keyOffset  = $res1->header('X-Radiko-KeyOffset');
-    my $keyLength  = $res1->header('X-Radiko-KeyLength');
+    my $authToken  = $res2->header('X-Radiko-Authtoken');
+    my $keyOffset  = $res2->header('X-Radiko-KeyOffset');
+    my $keyLength  = $res2->header('X-Radiko-KeyLength');
     my $tmpAuthKey = substr( $conf->{'AuthKey'}, $keyOffset, $keyLength );
-    my $partialKey = decode( 'utf8', encode_base64( encode( 'utf8', $tmpAuthKey ) ) );
-    my $header2    = {
-        %{ $conf->{'AuthHeaders'} },
+    my $partialKey = trim( decode( 'utf8', encode_base64( encode( 'utf8', $tmpAuthKey ) ) ) );
+    $headers = {
+        %{$headers},
         'X-Radiko-AuthToken'  => $authToken,
         'X-Radiko-PartialKey' => $partialKey,
+        'X-Radiko-Session'    => $session,
     };
-    my $res2 = $self->request(
+    my $res3 = $self->request(
         GET => $conf->{'Uris'}{'Auth2'},
         undef,
-        $header2,
+        $headers,
     )->call();
 
-    if ( !$res2->is_success || $res2->code != 200 ) {
-        $self->log( 'Failed Auth2: ' . $res2->status_line . ', ' . $res2->decoded_content );
+    if ( !$res3->is_success || $res3->code != 200 ) {
+        $self->log( 'Failed Auth2: ' . $res3->status_line . ', ' . $res3->decoded_content );
         return;
     }
-    $res2->decoded_content =~ /(?<Id>[^,]+),(?<NameJp>[^,]+),(?<NameEn>[^,]+?)\s*$/;
-    return { Token => $authToken, Area => {%+}, };
+    $res3->decoded_content =~ /(?<Id>[^,]+),(?<NameJp>[^,]+),(?<NameEn>[^,]+?)\s*$/;
+    return { User => $userId, Token => $authToken, Area => {%+}, };
+}
+
+sub generateUserId {
+    my $self   = shift;
+    my $hex    = '0123456789abcdef';
+    my $lenHex = length($hex);
+    my $lenId  = 32;
+    return join( '', map { substr( $hex, int( rand($lenHex) ), 1 ) } ( 0 .. ( $lenId - 1 ) ) );
 }
 
 sub getStreamUris {
@@ -409,13 +527,14 @@ sub makePlaylistUri {
     my $query     = {
         l          => 15,
         type       => 'b',
-        lsid       => 'dummy',
+        lsid       => $authToken->{'User'},
         station_id => $station,
     };
     $uri->query_form( %{$query} );
     my $h = {
-        'Origin'             => 'https://radiko.jp',
-        'Referer'            => 'https://radiko.jp/',
+        Host                 => $uri->host(),
+        Origin               => 'https://radiko.jp',
+        Referer              => 'https://radiko.jp/',
         'X-Radiko-AreaId'    => $authToken->{'Area'}{'Id'} || '',
         'X-Radiko-AuthToken' => $authToken->{'Token'}      || '',
     };

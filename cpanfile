@@ -3,7 +3,8 @@ requires 'DBIx::NamedParams';
 requires 'Digest::SHA2';
 requires 'Encode';
 requires 'File::HomeDir';
-requires 'File::Temp';
+requires 'File::Share';
+requires 'File::Slurper';
 requires 'Filesys::DfPortable';
 requires 'FindBin::libs';
 requires 'HTML::Entities';
@@ -24,11 +25,12 @@ requires 'Time::Seconds';
 requires 'Try::Tiny';
 requires 'URI';
 requires 'URI::Escape';
+requires 'Unicode::Collate';
 requires 'XML::Simple';
 requires 'YAML::Syck';
 requires 'feature';
 requires 'parent';
-requires 'perl', '5.008001';
+requires 'perl',    '5.010';
 requires 'version', '0.77';
 
 on configure => sub {
