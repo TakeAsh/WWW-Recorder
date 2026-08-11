@@ -12,6 +12,7 @@ use IPC::Cmd   qw(can_run run);
 use List::Util qw(first);
 use Digest::SHA2;
 use URI;
+use File::Path    qw(rmtree);
 use File::Slurper qw(write_text write_binary);
 use FindBin::libs;
 use WWW::Recorder::Util;
@@ -328,40 +329,23 @@ sub getStream {
         )->call();
 
         if ( !$res->is_success ) {
-
-            #say 'Failed to get playlist: ' . $res->decoded_content;
+            say 'Failed to get playlist: ' . $res->decoded_content;
             return 0;
         }
         write_text( "${dirWork}/playlist.m3u8", $res->decoded_content );
         my @uriMedia = grep { !startsWith( $_, '#' ) } split( "\n", $res->decoded_content );
-
-        #say $uriMedia[0];
-        my @mediaHeader = ();
-        my %medias      = ();
+        my %medias   = ();
         while ( ( my $now = WWW::Recorder::TimePiece->new() ) < ( $end + ONE_MINUTE ) ) {
             $res = $self->request(
                 GET => $uriMedia[0] . '&_=' . $now->epoch . '999',
                 undef,
                 $playlistUri->{'Headers'},
             )->call();
-
-            #say $res->status_line;
-            #say $res->decoded_content;
             if ( !$res->is_success ) {
                 sleep(1);
                 next;
             }
             my @medias2 = split( "\n", $res->decoded_content );
-            if ( !@mediaHeader ) {
-                while ( my $line = shift(@medias2) ) {
-                    if ( !startsWith( $line, '#EXT-X-PROGRAM-DATE-TIME:' ) ) {
-                        push( @mediaHeader, $line );
-                    } else {
-                        unshift( @medias2, $line );
-                        last;
-                    }
-                }
-            }
             while ( my $media3 = $self->getMediaInfo( \@medias2 ) ) {
                 if ( exists $medias{ $media3->{'Datetime'} } ) { next; }
                 $medias{ $media3->{'Datetime'} } = $media3;
@@ -386,9 +370,9 @@ sub getStream {
         my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf )
             = run( command => $cmd, verbose => 0, timeout => 120 * 60 );
         my $messages = integrateErrorMessages( $error_message, $stdout_buf, $stderr_buf );
-
-        #say $messages->{StdErr};
-
+        if ($success) {
+            rmtree($dirWork);
+        }
         if ( !( -f $pathWork ) ) {
             $self->log( "Failed to get stream", $messages->{'All'} );
             return 0;

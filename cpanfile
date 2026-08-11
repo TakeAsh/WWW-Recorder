@@ -3,6 +3,7 @@ requires 'DBIx::NamedParams';
 requires 'Digest::SHA2';
 requires 'Encode';
 requires 'File::HomeDir';
+requires 'File::Path';
 requires 'File::Share';
 requires 'File::Slurper';
 requires 'Filesys::DfPortable';
