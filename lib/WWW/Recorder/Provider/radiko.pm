@@ -344,15 +344,14 @@ sub getStream {
             my @medias2 = split( "\n", $res->decoded_content );
             while ( my $media3 = $self->getMediaInfo( \@medias2 ) ) {
                 if ( exists $medias{ $media3->{'Datetime'} } ) { next; }
-                $medias{ $media3->{'Datetime'} } = $media3;
                 $res = $self->request(
                     GET => $media3->{'Uri'},
                     undef,
                     $playlistUri->{'Headers'},
                 )->call();
-                if ( $res->is_success ) {
-                    write_binary( "${dirWork}/$media3->{File}", $res->content );
-                }
+                if ( !$res->is_success ) { next; }
+                $medias{ $media3->{'Datetime'} } = $media3;
+                write_binary( "${dirWork}/$media3->{File}", $res->content );
             }
             sleep(5);
         }
