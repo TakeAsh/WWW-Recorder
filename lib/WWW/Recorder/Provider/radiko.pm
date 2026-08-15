@@ -306,22 +306,22 @@ sub getStream {
     my $success = 0;
 
     while (1) {
-        $start = WWW::Recorder::TimePiece->new();
-        my $duration = ( $end - $start )->seconds;
+        $now = WWW::Recorder::TimePiece->new();
+        my $duration = ( $end - $now )->seconds;
         if ( $duration < 0 ) { last; }
         if ( $duration >= 2 * 60 * 60 - 5 ) {    # over 2hr
             $duration = 1 * 60 * 60;             # limit 1hr
         }
-        my $dirWork = "${dest}/" . join( '_', $self->name, $extra->Station, $extra->DateTime );
+        my $dirWork = "${dest}/" . join( '_', $self->name, $extra->Station, $now->toPostfix('_') );
         if ( !( -d $dirWork ) ) {
             mkdir($dirWork) or die("Failed to make directory '${dirWork}': $!");
         }
-        my $fname       = join( " ", $fnameBase, $start->toPostfix() ) . '.m4a';
+        my $fname       = join( " ", $fnameBase, $now->toPostfix() ) . '.m4a';
         my $pathWork    = "${dest}/.${fname}";
         my $pathFinish  = "${dest}/${fname}";
         my $authToken   = $self->getAuthToken()         or next;
         my $streamUri   = $self->getStreamUri($station) or next;
-        my $playlistUri = $self->makePlaylistUri( $station, $authToken, $streamUri );
+        my $playlistUri = $self->makePlaylistUri( $station, $authToken, $streamUri, $start, $end );
         my $res         = $self->request(
             GET => $playlistUri->{'UriFull'},
             undef,
@@ -329,22 +329,18 @@ sub getStream {
         )->call();
 
         if ( !$res->is_success ) {
-            say 'Failed to get playlist: ' . $res->decoded_content;
+            $self->log( 'Failed to get playlist: ' . $res->decoded_content );
             return 0;
         }
-        write_text( "${dirWork}/playlist.m3u8", $res->decoded_content );
         my @uriMedia = grep { !startsWith( $_, '#' ) } split( "\n", $res->decoded_content );
         my %medias   = ();
-        while ( ( my $now = WWW::Recorder::TimePiece->new() ) < ( $end + ONE_MINUTE ) ) {
+        while ( ( $now = WWW::Recorder::TimePiece->new() ) < ( $end + 1.5 * ONE_MINUTE ) ) {
             $res = $self->request(
                 GET => $uriMedia[0] . '&_=' . $now->epoch . '999',
                 undef,
                 $playlistUri->{'Headers'},
             )->call();
-            if ( !$res->is_success ) {
-                sleep(1);
-                next;
-            }
+            if ( !$res->is_success ) { last; }
             my @medias2 = split( "\n", $res->decoded_content );
             while ( my $media3 = $self->getMediaInfo( \@medias2 ) ) {
                 if ( exists $medias{ $media3->{'Datetime'} } ) { next; }
@@ -360,6 +356,7 @@ sub getStream {
             }
             sleep(5);
         }
+        if ( scalar(%medias) <= 0 ) { next; }
         my $fnameList = "${dirWork}/files.txt";
         my $medialist
             = join( "\n", map { "file ${dirWork}/" . $medias{$_}{'File'} } sort( keys(%medias) ) )
@@ -370,6 +367,7 @@ sub getStream {
         my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf )
             = run( command => $cmd, verbose => 0, timeout => 120 * 60 );
         my $messages = integrateErrorMessages( $error_message, $stdout_buf, $stderr_buf );
+
         if ($success) {
             rmtree($dirWork);
         }
@@ -507,12 +505,21 @@ sub makePlaylistUri {
     my $station   = shift or return;
     my $authToken = shift or return;
     my $streamUri = shift or return;
-    my $uri       = URI->new($streamUri);
-    my $query     = {
+    my $start     = shift or return;
+    my $end       = shift or return;
+    $start = $start->strftime('%Y%m%d%H%M00');
+    $end   = $end->strftime('%Y%m%d%H%M00');
+    my $uri   = URI->new($streamUri);
+    my $query = {
         l          => 15,
         type       => 'b',
         lsid       => $authToken->{'User'},
         station_id => $station,
+        start_at   => $start,
+        ft         => $start,
+        end_at     => $end,
+        to         => $end,
+        preroll    => 2,
     };
     $uri->query_form( %{$query} );
     my $h = {

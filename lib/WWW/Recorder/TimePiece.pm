@@ -40,8 +40,9 @@ sub stringify {
 }
 
 sub toPostfix {
-    my $self = shift;
-    return $self->strftime('%Y-%m-%d %H-%M');
+    my $self      = shift;
+    my $separator = shift || ' ';
+    return $self->strftime("%Y-%m-%d${separator}%H-%M");
 }
 
 1;
