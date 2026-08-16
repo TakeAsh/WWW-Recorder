@@ -312,7 +312,7 @@ sub getStream {
         if ( $duration >= 2 * 60 * 60 - 5 ) {    # over 2hr
             $duration = 1 * 60 * 60;             # limit 1hr
         }
-        my $dirWork = "${dest}/" . join( '_', $self->name, $extra->Station, $now->toPostfix('_') );
+        my $dirWork = "${dest}/." . join( '_', $self->name, $extra->Station, $now->toPostfix('_') );
         if ( !( -d $dirWork ) ) {
             mkdir($dirWork) or die("Failed to make directory '${dirWork}': $!");
         }
