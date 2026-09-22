@@ -349,7 +349,7 @@ sub getStream {
                     undef,
                     $playlistUri->{'Headers'},
                 )->call();
-                if ( !$res->is_success ) { next; }
+                if ( !$res->is_success || bytes::length( $res->content ) <= 0 ) { next; }
                 $medias{ $media3->{'Datetime'} } = $media3;
                 write_binary( "${dirWork}/$media3->{File}", $res->content );
             }
