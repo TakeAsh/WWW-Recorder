@@ -355,11 +355,8 @@ sub getStream {
             }
             sleep(5);
         }
-        if ( scalar(%medias) <= 0 ) { next; }
         my $fnameList = "${dirWork}/files.txt";
-        my $medialist
-            = join( "\n", map { "file ${dirWork}/" . $medias{$_}{'File'} } sort( keys(%medias) ) )
-            . "\n";
+        my $medialist = join( "\n", map {"file $_"} sort( glob("${dirWork}/*") ) ) . "\n";
         write_text( $fnameList, $medialist );
         my $cmd = sprintf( '%s -y -f concat -safe 0 -i %s -c copy -movflags faststart %s',
             $ffmpeg, sysQuote($fnameList), sysQuote($pathWork) );
