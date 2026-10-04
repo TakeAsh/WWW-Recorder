@@ -15,6 +15,10 @@ const TrStatuses = new CyclicEnum(
 
 class WwwRecorder {
 
+  static #spanMaxPage = d.getElementById('spanMaxPage');
+  static #maxPage = WwwRecorder.#spanMaxPage ? parseInt(WwwRecorder.#spanMaxPage.textContent) : 0;
+  static #inputPage = d.getElementById('inputPage');
+
   static run() {
     this.prepareProgram();
     this.prepareMenu();
@@ -52,19 +56,31 @@ class WwwRecorder {
   }
 
   static prepareMenu() {
-    d.getElementById('selectMenu')
-      .addEventListener('change', this.#changeMenu, false);
+    d.getElementById('selectMenu').addEventListener('change', this.#changeMenu);
 
-    ['ByStatus', 'ByTitle', 'ByUpdate']
-      .forEach(key => {
-        d.getElementById(`Button_Sort_${key}`)
-          .addEventListener('click', this.#sortBy, false);
-      });
+    Array.from(d.querySelector('.HeaderArea').querySelectorAll('input[type="text"]'))
+      .forEach(inp => inp.addEventListener('focus', (ev) => { ev.target.select(); }));
+
+    d.getElementById('buttonPagePrevPrev')?.addEventListener('click', (ev) => {
+      WwwRecorder.#limitPage(parseInt(WwwRecorder.#inputPage.value) - 10);
+    });
+    d.getElementById('buttonPagePrev')?.addEventListener('click', (ev) => {
+      WwwRecorder.#limitPage(parseInt(WwwRecorder.#inputPage.value) - 1);
+    });
+    d.getElementById('buttonPageNext')?.addEventListener('click', (ev) => {
+      WwwRecorder.#limitPage(parseInt(WwwRecorder.#inputPage.value) + 1);
+    });
+    d.getElementById('buttonPageNextNext')?.addEventListener('click', (ev) => {
+      WwwRecorder.#limitPage(parseInt(WwwRecorder.#inputPage.value) + 10);
+    });
+    d.getElementById('inputPage')?.addEventListener('change', (ev) => {
+      WwwRecorder.#limitPage(parseInt(WwwRecorder.#inputPage.value));
+    });
 
     ['Retry', 'Abort', 'Remove']
       .forEach(key => {
         d.getElementById(`Button_Command_${key}`)
-          .addEventListener('click', this.#command, false);
+          .addEventListener('click', this.#command);
       });
     this.#prepareManuAdd();
   }
@@ -145,6 +161,12 @@ class WwwRecorder {
     window.open(`./editProgram.cgi?Provider=${d.querySelector('#Provider').value}&ID=${tr.dataset.id}`, 'editProgram');
   };
 
+  static #limitPage(page) {
+    WwwRecorder.#inputPage.value = page < 0 ? 0 :
+      page > WwwRecorder.#maxPage ? WwwRecorder.#maxPage :
+        page;
+  }
+
   static #addPrograms = (event) => {
     event.preventDefault();
     const data = new FormData(d.getElementById('formNewPrograms'));
@@ -163,11 +185,6 @@ class WwwRecorder {
         textarea.value = '';
         textarea.focus();
       });
-  };
-
-  static #sortBy = (event) => {
-    d.getElementById('SortBy').value = event.target.dataset.by;
-    d.getElementById('formQueue').submit();
   };
 
   static #command = (event) => {

@@ -21,15 +21,18 @@ $YAML::Syck::ImplicitUnicode = 1;
 my $q = new CGI;
 $q->charset(term_encoding);
 my $cookie = getCookie($q);
-my $tt     = Template->new(
+$cookie = { %{$cookie}, PageLimit => $q->param('PageLimit') || $cookie->{'PageLimit'} || 100, };
+my $tt = Template->new(
     {   INCLUDE_PATH => dist_dir('WWW-Recorder') . '/templates',
         ENCODING     => 'utf-8',
     }
 ) or die( Template->error() );
 
 my $query        = { Cookie => $cookie, map { $_ => [ $q->multi_param($_) ]; } $q->multi_param() };
-my $command      = $q->param('Command') || '';
-my $sortBy       = $q->param('SortBy')  || 'Status';
+my $command      = $q->param('Command')                        || '';
+my $sortBy       = $q->param('SortBy')                         || 'Status';
+my $filter       = decodeUtf8( scalar( $q->param('Filter') ) ) || '';
+my $page         = $q->param('Page')                           || 0;
 my $showSkeleton = $cookie->{'ShowSkeleton'}
     = defined( $q->param('ShowSkeleton') )
     ? !!$q->param('ShowSkeleton')
@@ -44,6 +47,8 @@ if ( !grep { $_ eq $provider } @providers ) {
 $cookie->{'Provider'} = $provider;
 my $extraKeys      = "WWW::Recorder::Provider::${provider}"->keysShort();
 my $extraKeyLabels = $extraKeys->getLabels();
+my $programs = getProgramsForDisplay( $provider, $extraKeys->getKeys(), $sortBy, $filter, $page,
+    $cookie->{'PageLimit'} );
 defined( my $pid = fork() ) or die("Fail to fork: $!");
 if ( !$pid ) {    # Child process
     close(STDOUT);
@@ -62,10 +67,13 @@ $tt->process(
         providers =>
             [ map { { name => $_, selected => $_ eq $provider ? 'selected' : '', } } @providers ],
         sortBy       => $sortBy,
-        info         => undef,                    # Dump($query),
+        filter       => $filter,
+        info         => undef,                     # Dump($query),
         numOfColumns => 7 + @{$extraKeyLabels},
         extraKeys    => $extraKeyLabels,
-        programs     => getProgramsForDisplay( $provider, $extraKeys->getKeys(), $sortBy ),
+        programs     => $programs->{'Programs'},
+        page         => $programs->{'Page'},
+        maxPage      => $programs->{'MaxPage'},
     },
     \$out
 ) or die( $tt->error );

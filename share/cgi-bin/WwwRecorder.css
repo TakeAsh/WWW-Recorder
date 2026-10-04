@@ -285,6 +285,19 @@ img.emoji {
   vertical-align: -0.1em;
 }
 
+#formShow {
+  display: grid;
+}
+
+#inputPage {
+  width: 2em;
+}
+
+#panelSubmitShow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
 .HeaderArea {
   position: fixed;
   top: 0;

@@ -50,6 +50,10 @@ CheckProgram: |
   FROM `Programs` 
   WHERE `Provider` = :Provider-VARCHAR AND `ID` = :ID-VARCHAR 
     AND `Status` IN ("RECORDING", "STANDBY", "DONE", "ABORT");
+GetNumOfProgramsForDisplay: |
+  SELECT count(*) AS `NumOfPrograms` 
+  FROM `Programs` p
+  WHERE p.`Provider` = :Provider-VARCHAR
 GetProgramsForDisplay: |
   SELECT p.*, 
     DATE_FORMAT(p.`Start`, '%m/%d %H:%i') AS `StartShort`, 
@@ -58,10 +62,12 @@ GetProgramsForDisplay: |
   FROM `Programs` p
   LEFT JOIN `States` s ON p.`Status` = s.`Status`
   WHERE p.`Provider` = :Provider-VARCHAR
+WhereFilter:  AND p.`Title` collate utf8mb4_unicode_ci LIKE :Filter-VARCHAR
 SortBy:
-  Status:   ORDER BY s.`Order`, p.`Start`, p.`Title`, p.`End`;
-  Title:    ORDER BY p.`Title` COLLATE utf8mb4_unicode_ci, p.`Start`, s.`Order`, p.`End`;
-  Update:   ORDER BY p.`Update` desc, s.`Order`, p.`Start`, p.`Title`, p.`End`;
+  Status:   ORDER BY s.`Order`, p.`Start`, p.`Title`, p.`End`
+  Title:    ORDER BY p.`Title` COLLATE utf8mb4_unicode_ci, p.`Start`, s.`Order`, p.`End`
+  Update:   ORDER BY p.`Update` desc, s.`Order`, p.`Start`, p.`Title`, p.`End`
+Paging: LIMIT :Offset-INTEGER, :Rows-INTEGER;
 GetProgramsForRecord: |
   SELECT p.*
   FROM `Programs` p

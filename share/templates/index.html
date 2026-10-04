@@ -20,7 +20,6 @@
     <form id="formQueue" name="formQueue" method="GET" action="./" enctype="multipart/form-data">
       <input id="Command" type="hidden" name="Command" value="Show">
       <input id="Provider" type="hidden" name="Provider" value="[% provider %]">
-      <input id="SortBy" type="hidden" name="SortBy" value="[% sortBy %]">
       <table class="sticky_table" border="1">
         <thead>
           <tr>
@@ -68,8 +67,8 @@
     <div id="Menu" class="MenuPart">
       <select id="selectMenu">
         <option value="-" selected>Menu</option>
+        <option value="Show">Show</option>
         <option value="Add">Add</option>
-        <option value="Sort">Sort</option>
         <option value="Retry">Retry</option>
         <option value="Abort">Abort</option>
         <option value="Remove">Remove</option>
@@ -78,6 +77,29 @@
       </select>
     </div>
     <div class="MenuPart">
+      <div id="Menu_Show" class="MenuArea">
+        <form id="formShow" method="POST" action="./" enctype="multipart/form-data">
+          <select id="selectSort" name="SortBy" title="Sort by">
+            <option [% IF sortBy=='Status' %]selected[% END %]>Status</option>
+            <option [% IF sortBy=='Title' %]selected[% END %]>Title</option>
+            <option [% IF sortBy=='Update' %]selected[% END %]>Update</option>
+          </select>
+          <input id="inputFilter" type="text" name="Filter" placeholder="Filter" title="Filter" value="[% filter %]">
+          <div id="naviPage">
+            <button id="buttonPagePrevPrev" type="button">&lt;&lt;</button>
+            <button id="buttonPagePrev" type="button">&lt;</button>
+            <input id="inputPage" type="text" name="Page" title="Page" value="[% page %]">
+            /
+            <span id="spanMaxPage">[% maxPage %]</span>
+            <button id="buttonPageNext" type="button">&gt;</button>
+            <button id="buttonPageNextNext" type="button">&gt;&gt;</button>
+          </div>
+          <div id="panelSubmitShow">
+            <input id="buttonShow" type="submit">
+            <input type="reset">
+          </div>
+        </form>
+      </div>
       <div id="Menu_Add" class="MenuArea">
         <form id="formNewPrograms" name="formNewPrograms" method="POST" enctype="multipart/form-data">
           <input type="hidden" name="Provider" value="[% provider %]">
@@ -85,11 +107,6 @@
           <input type="submit" id="addPrograms_Submit" name="Command" value="Add"><br>
           <textarea id="addPrograms_ProgramUris" name="ProgramUris" rows="5" cols="80"></textarea>
         </form>
-      </div>
-      <div id="Menu_Sort" class="MenuArea">
-        <button id="Button_Sort_ByStatus" data-by="Status">By Status</button>
-        <button id="Button_Sort_ByTitle" data-by="Title">By Title</button>
-        <button id="Button_Sort_ByUpdate" data-by="Update">By Update</button>
       </div>
       <div id="Menu_Retry" class="MenuArea">
         <button id="Button_Command_Retry" data-command="Retry">Retry</button>

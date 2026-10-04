@@ -8,6 +8,7 @@ use feature qw(say);
 use Encode;
 use Exporter 'import';
 use YAML::Syck qw(LoadFile DumpFile Dump);
+use POSIX      qw(floor);
 use Time::Piece;
 use File::Basename;
 use File::Spec;
@@ -44,16 +45,37 @@ sub getProgramsForDisplay {
     my $provider  = shift or return;
     my $extraKeys = shift or return;
     my $sortBy    = shift || 'Status';
+    my $filter    = shift || '';
+    my $page      = shift || 0;
+    my $limit     = shift || 100;
     my $dbh       = connectDB( $conf->{'DbInfo'} );
-    my $sth
-        = $dbh->prepare_ex( join( ' ', $sql->{'GetProgramsForDisplay'}, $sql->{'SortBy'}{$sortBy} ),
-        { Provider => $provider, } )
+    my $st1       = join( ' ',
+        $sql->{'GetNumOfProgramsForDisplay'},
+        ( $filter ? $sql->{'WhereFilter'} : '' ), ';' );
+    my $filter2 = $filter ? "%${filter}%" : $filter;
+    my $sth1    = $dbh->prepare_ex( $st1, { Provider => $provider, Filter => $filter2, } )
         or die($DBI::errstr);
-    $sth->execute() or die($DBI::errstr);
+    $sth1->execute() or die($DBI::errstr);
+    my $maxPage = floor( $sth1->fetchrow_hashref->{'NumOfPrograms'} / $limit );
+    $sth1->finish;
+    $page
+        = $page < 0        ? 0
+        : $page > $maxPage ? $maxPage
+        :                    $page;
+    my $st2 = join( ' ',
+        $sql->{'GetProgramsForDisplay'},
+        ( $filter ? $sql->{'WhereFilter'} : '' ),
+        $sql->{'SortBy'}{$sortBy},
+        $sql->{'Paging'} );
+    my $sth2
+        = $dbh->prepare_ex( $st2,
+        { Provider => $provider, Filter => $filter2, Offset => $page * $limit, Rows => $limit, } )
+        or die($DBI::errstr);
+    $sth2->execute() or die($DBI::errstr);
     my @programs = ();
     my $index    = 0;
 
-    while ( my $row = $sth->fetchrow_hashref ) {
+    while ( my $row = $sth2->fetchrow_hashref ) {
         my $p    = WWW::Recorder::Program->new($row);
         my $desc = join( "",
             map  { '<div>' . LfToBr( unifyLf($_) ) . '</div>' }
@@ -74,11 +96,13 @@ sub getProgramsForDisplay {
             :                            undef;
         push( @programs, $p2 );
     }
-    $sth->finish;
+    $sth2->finish;
     $dbh->disconnect;
-    return !@programs
-        ? undef
-        : [@programs];
+    return {
+        Programs => ( !@programs ? undef : [@programs] ),
+        Page     => $page,
+        MaxPage  => $maxPage,
+    };
 }
 
 sub getProgramUris {
