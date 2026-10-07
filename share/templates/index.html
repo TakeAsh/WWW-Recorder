@@ -79,6 +79,7 @@
     <div class="MenuPart">
       <div id="Menu_Show" class="MenuArea">
         <form id="formShow" method="POST" action="./" enctype="multipart/form-data">
+          <input id="Provider" type="hidden" name="Provider" value="[% provider %]">
           <select id="selectSort" name="SortBy" title="Sort by">
             <option [% IF sortBy=='Status' %]selected[% END %]>Status</option>
             <option [% IF sortBy=='Title' %]selected[% END %]>Title</option>
